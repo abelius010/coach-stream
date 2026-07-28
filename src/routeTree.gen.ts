@@ -9,38 +9,120 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as DemoRouteImport } from './routes/demo'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DemoIndexRouteImport } from './routes/demo.index'
+import { Route as DemoChatRouteImport } from './routes/demo.chat'
+import { Route as DemoBandejaRouteImport } from './routes/demo.bandeja'
+import { Route as DemoAlumnosIndexRouteImport } from './routes/demo.alumnos.index'
+import { Route as DemoAlumnosIdRouteImport } from './routes/demo.alumnos.$id'
 
+const DemoRoute = DemoRouteImport.update({
+  id: '/demo',
+  path: '/demo',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DemoIndexRoute = DemoIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DemoRoute,
+} as any)
+const DemoChatRoute = DemoChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => DemoRoute,
+} as any)
+const DemoBandejaRoute = DemoBandejaRouteImport.update({
+  id: '/bandeja',
+  path: '/bandeja',
+  getParentRoute: () => DemoRoute,
+} as any)
+const DemoAlumnosIndexRoute = DemoAlumnosIndexRouteImport.update({
+  id: '/alumnos/',
+  path: '/alumnos/',
+  getParentRoute: () => DemoRoute,
+} as any)
+const DemoAlumnosIdRoute = DemoAlumnosIdRouteImport.update({
+  id: '/alumnos/$id',
+  path: '/alumnos/$id',
+  getParentRoute: () => DemoRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/demo': typeof DemoRouteWithChildren
+  '/demo/bandeja': typeof DemoBandejaRoute
+  '/demo/chat': typeof DemoChatRoute
+  '/demo/': typeof DemoIndexRoute
+  '/demo/alumnos/$id': typeof DemoAlumnosIdRoute
+  '/demo/alumnos/': typeof DemoAlumnosIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/demo/bandeja': typeof DemoBandejaRoute
+  '/demo/chat': typeof DemoChatRoute
+  '/demo': typeof DemoIndexRoute
+  '/demo/alumnos/$id': typeof DemoAlumnosIdRoute
+  '/demo/alumnos': typeof DemoAlumnosIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/demo': typeof DemoRouteWithChildren
+  '/demo/bandeja': typeof DemoBandejaRoute
+  '/demo/chat': typeof DemoChatRoute
+  '/demo/': typeof DemoIndexRoute
+  '/demo/alumnos/$id': typeof DemoAlumnosIdRoute
+  '/demo/alumnos/': typeof DemoAlumnosIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/demo'
+    | '/demo/bandeja'
+    | '/demo/chat'
+    | '/demo/'
+    | '/demo/alumnos/$id'
+    | '/demo/alumnos/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/demo/bandeja'
+    | '/demo/chat'
+    | '/demo'
+    | '/demo/alumnos/$id'
+    | '/demo/alumnos'
+  id:
+    | '__root__'
+    | '/'
+    | '/demo'
+    | '/demo/bandeja'
+    | '/demo/chat'
+    | '/demo/'
+    | '/demo/alumnos/$id'
+    | '/demo/alumnos/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DemoRoute: typeof DemoRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/demo': {
+      id: '/demo'
+      path: '/demo'
+      fullPath: '/demo'
+      preLoaderRoute: typeof DemoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +130,65 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/demo/': {
+      id: '/demo/'
+      path: '/'
+      fullPath: '/demo/'
+      preLoaderRoute: typeof DemoIndexRouteImport
+      parentRoute: typeof DemoRoute
+    }
+    '/demo/chat': {
+      id: '/demo/chat'
+      path: '/chat'
+      fullPath: '/demo/chat'
+      preLoaderRoute: typeof DemoChatRouteImport
+      parentRoute: typeof DemoRoute
+    }
+    '/demo/bandeja': {
+      id: '/demo/bandeja'
+      path: '/bandeja'
+      fullPath: '/demo/bandeja'
+      preLoaderRoute: typeof DemoBandejaRouteImport
+      parentRoute: typeof DemoRoute
+    }
+    '/demo/alumnos/': {
+      id: '/demo/alumnos/'
+      path: '/alumnos'
+      fullPath: '/demo/alumnos/'
+      preLoaderRoute: typeof DemoAlumnosIndexRouteImport
+      parentRoute: typeof DemoRoute
+    }
+    '/demo/alumnos/$id': {
+      id: '/demo/alumnos/$id'
+      path: '/alumnos/$id'
+      fullPath: '/demo/alumnos/$id'
+      preLoaderRoute: typeof DemoAlumnosIdRouteImport
+      parentRoute: typeof DemoRoute
+    }
   }
 }
 
+interface DemoRouteChildren {
+  DemoBandejaRoute: typeof DemoBandejaRoute
+  DemoChatRoute: typeof DemoChatRoute
+  DemoIndexRoute: typeof DemoIndexRoute
+  DemoAlumnosIdRoute: typeof DemoAlumnosIdRoute
+  DemoAlumnosIndexRoute: typeof DemoAlumnosIndexRoute
+}
+
+const DemoRouteChildren: DemoRouteChildren = {
+  DemoBandejaRoute: DemoBandejaRoute,
+  DemoChatRoute: DemoChatRoute,
+  DemoIndexRoute: DemoIndexRoute,
+  DemoAlumnosIdRoute: DemoAlumnosIdRoute,
+  DemoAlumnosIndexRoute: DemoAlumnosIndexRoute,
+}
+
+const DemoRouteWithChildren = DemoRoute._addFileChildren(DemoRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DemoRoute: DemoRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
