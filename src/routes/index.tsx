@@ -114,7 +114,7 @@ function Nav() {
         <nav className="hidden items-center gap-8 text-sm text-ink-muted md:flex">
           <a href="#problems" className="hover:text-foreground transition-colors">Producto</a>
           <a href="#everything" className="hover:text-foreground transition-colors">Funciones</a>
-          <a href="#pricing" className="hover:text-foreground transition-colors">Precios</a>
+          <a href="/demo" className="hover:text-foreground transition-colors">Precios</a>
           <a href="#faq" className="hover:text-foreground transition-colors">FAQ</a>
         </nav>
         <div className="hidden items-center gap-2 md:flex">
@@ -122,7 +122,7 @@ function Nav() {
             Iniciar sesión
           </a>
           <a
-            href="#pricing"
+            href="/demo"
             className="inline-flex items-center gap-1.5 rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-all hover:opacity-90"
           >
             Empieza gratis
@@ -142,9 +142,9 @@ function Nav() {
           <div className="container-page flex flex-col gap-4 py-4 text-sm">
             <a href="#problems">Producto</a>
             <a href="#everything">Funciones</a>
-            <a href="#pricing">Precios</a>
+            <a href="/demo">Precios</a>
             <a href="#faq">FAQ</a>
-            <a href="#pricing" className="mt-2 inline-flex items-center justify-center rounded-lg bg-foreground px-4 py-2.5 font-medium text-background">
+            <a href="/demo" className="mt-2 inline-flex items-center justify-center rounded-lg bg-foreground px-4 py-2.5 font-medium text-background">
               Empieza gratis
             </a>
           </div>
@@ -189,14 +189,14 @@ function Hero() {
         <Reveal delay={240}>
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <a
-              href="#pricing"
+              href="/demo"
               className="inline-flex items-center gap-2 rounded-xl bg-foreground px-6 py-3.5 text-sm font-medium text-background shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-glow"
             >
               Empieza gratis
               <ArrowRight className="h-4 w-4" />
             </a>
             <a
-              href="#morning"
+              href="/demo"
               className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-6 py-3.5 text-sm font-medium hover:bg-surface transition-colors"
             >
               <Play className="h-3.5 w-3.5 fill-current" />
