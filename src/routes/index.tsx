@@ -114,7 +114,7 @@ function Nav() {
         <nav className="hidden items-center gap-8 text-sm text-ink-muted md:flex">
           <a href="#problems" className="hover:text-foreground transition-colors">Producto</a>
           <a href="#everything" className="hover:text-foreground transition-colors">Funciones</a>
-          <a href="/demo" className="hover:text-foreground transition-colors">Precios</a>
+          <a href="#pricing" className="hover:text-foreground transition-colors">Precios</a>
           <a href="#faq" className="hover:text-foreground transition-colors">FAQ</a>
         </nav>
         <div className="hidden items-center gap-2 md:flex">
@@ -142,7 +142,7 @@ function Nav() {
           <div className="container-page flex flex-col gap-4 py-4 text-sm">
             <a href="#problems">Producto</a>
             <a href="#everything">Funciones</a>
-            <a href="/demo">Precios</a>
+            <a href="#pricing">Precios</a>
             <a href="#faq">FAQ</a>
             <a href="/demo" className="mt-2 inline-flex items-center justify-center rounded-lg bg-foreground px-4 py-2.5 font-medium text-background">
               Empieza gratis
@@ -843,7 +843,7 @@ function CTA() {
               Empieza gratis. Configura tu panel en 5 minutos. Cancela cuando quieras.
             </p>
             <a
-              href="#"
+              href="/demo"
               className="mt-8 inline-flex items-center gap-2 rounded-xl bg-background px-6 py-3.5 text-sm font-medium text-foreground transition-all hover:-translate-y-0.5"
             >
               Empieza gratis
