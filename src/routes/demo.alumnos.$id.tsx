@@ -155,7 +155,7 @@ function StudentDetail() {
             {workoutDeleted ? (
               <EmptyDeletedState kind="workout" />
             ) : (
-              <EntrenosTab />
+              <WorkoutRoutine studentId={student.id} onToast={pushToast} />
             )}
           </TabShell>
         )}
