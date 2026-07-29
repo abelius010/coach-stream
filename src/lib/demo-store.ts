@@ -140,7 +140,8 @@ export const useDemoStore = create<State>()(
     }),
     {
       name: "fitflow-demo",
-      version: 1,
+      version: 2,
+      migrate: (persisted: unknown, _v: number) => persisted as State,
       storage: createJSONStorage(() => localStorage),
     },
   ),
