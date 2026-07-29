@@ -64,7 +64,7 @@ function StudentDetail() {
   const student = useDemoStore((s) => s.students.find((x) => x.id === id));
   const routine = useDemoStore((s) => s.routines[id]);
   const nutrition = useDemoStore((s) => s.nutritionPlans[id]);
-  const reviews = useDemoStore((s) => s.reviews[id] ?? []);
+  const reviews = useDemoStore((s) => s.reviews[id]);
   const habitsConfigured = useDemoStore((s) => s.habitsConfigured[id]);
 
   const [tab, setTab] = useState<TabId>("resumen");
@@ -378,8 +378,8 @@ function ResumenTab({
   isNew: boolean;
   onGoReview: () => void;
 }) {
-  const logs = useDemoStore((s) => s.weightLogs[student.id] ?? []);
-  const reviews = useDemoStore((s) => s.reviews[student.id] ?? []);
+  const logs = useDemoStore((s) => s.weightLogs[student.id]);
+  const reviews = useDemoStore((s) => s.reviews[student.id]);
 
   const hasProgress = isNew ? logs.length > 0 : true;
   const series = isNew ? logs.map((l) => l.kg) : seedWeightSeries.map((p) => p.kg);
@@ -499,8 +499,8 @@ function ProgresoTab({
   isNew: boolean;
   onToast: (t: string) => void;
 }) {
-  const logs = useDemoStore((s) => s.weightLogs[student.id] ?? []);
-  const reviews = useDemoStore((s) => s.reviews[student.id] ?? []);
+  const logs = useDemoStore((s) => s.weightLogs[student.id]);
+  const reviews = useDemoStore((s) => s.reviews[student.id]);
   const addReview = useDemoStore((s) => s.addReview);
   const removeReview = useDemoStore((s) => s.removeReview);
   const [reviewOpen, setReviewOpen] = useState(false);
@@ -812,7 +812,7 @@ function MultimediaTab({
   isNew: boolean;
   onToast: (t: string) => void;
 }) {
-  const files = useDemoStore((s) => s.media[student.id] ?? []);
+  const files = useDemoStore((s) => s.media[student.id]);
   const addMedia = useDemoStore((s) => s.addMedia);
   const removeMedia = useDemoStore((s) => s.removeMedia);
   const inputRef = useRef<HTMLInputElement>(null);
