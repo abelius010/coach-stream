@@ -343,6 +343,7 @@ const createFitFlowStore = (persistName: string, seed: Seed) =>
             media: omit(s.media),
             messages: omit(s.messages),
             workoutProgress: omit(s.workoutProgress),
+            nutritionProgress: omit(s.nutritionProgress),
           });
         },
         setRoutine: (studentId, weeks) =>
