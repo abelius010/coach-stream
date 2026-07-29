@@ -502,6 +502,47 @@ const createFitFlowStore = (persistName: string, seed: Seed) =>
             workoutProgress: { ...state.workoutProgress, [studentId]: prog },
           });
         },
+        setMealPhoto: (studentId, mealId, photo) => {
+          const state = get();
+          const s = state.nutritionProgress[studentId] ?? {};
+          const meal = s[mealId] ?? {};
+          set({
+            nutritionProgress: {
+              ...state.nutritionProgress,
+              [studentId]: {
+                ...s,
+                [mealId]: {
+                  ...meal,
+                  photo,
+                  photoAt: photo ? new Date().toISOString() : undefined,
+                  done: photo ? true : meal.done,
+                },
+              },
+            },
+          });
+        },
+        toggleMealDone: (studentId, mealId) => {
+          const state = get();
+          const s = state.nutritionProgress[studentId] ?? {};
+          const meal = s[mealId] ?? {};
+          set({
+            nutritionProgress: {
+              ...state.nutritionProgress,
+              [studentId]: { ...s, [mealId]: { ...meal, done: !meal.done } },
+            },
+          });
+        },
+        setMealNote: (studentId, mealId, note) => {
+          const state = get();
+          const s = state.nutritionProgress[studentId] ?? {};
+          const meal = s[mealId] ?? {};
+          set({
+            nutritionProgress: {
+              ...state.nutritionProgress,
+              [studentId]: { ...s, [mealId]: { ...meal, note } },
+            },
+          });
+        },
         resetDemo: () =>
           set({
             students: seed.students,
@@ -515,6 +556,7 @@ const createFitFlowStore = (persistName: string, seed: Seed) =>
             media: {},
             messages: {},
             workoutProgress: {},
+            nutritionProgress: {},
           }),
       }),
       {
