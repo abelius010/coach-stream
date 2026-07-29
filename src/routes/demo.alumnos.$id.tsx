@@ -141,9 +141,25 @@ function StudentDetail() {
             <button onClick={() => setTab("chat")} className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-sm hover:bg-surface">
               <MessageSquare className="h-3.5 w-3.5" /> Mensaje
             </button>
-            <button className="grid h-9 w-9 place-items-center rounded-lg border border-border hover:bg-surface">
-              <MoreHorizontal className="h-4 w-4" />
-            </button>
+            {role === "coach" && (
+              <ActionMenu
+                alwaysVisible
+                label="Acciones del alumno"
+                items={[
+                  {
+                    icon: <Pencil className="h-3.5 w-3.5" />,
+                    label: "Editar alumno",
+                    onClick: () => setEditing(true),
+                  },
+                  {
+                    icon: <Trash2 className="h-3.5 w-3.5" />,
+                    label: "Eliminar alumno",
+                    onClick: () => setConfirmDelete(true),
+                    danger: true,
+                  },
+                ]}
+              />
+            )}
           </div>
         </div>
       </div>
