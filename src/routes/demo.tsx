@@ -31,7 +31,7 @@ export const Route = createFileRoute("/demo")({
 });
 
 type NavItem = {
-  to: "/demo" | "/demo/alumnos" | "/demo/bandeja" | "/demo/chat";
+  to: "/demo" | "/demo/alumnos" | "/demo/bandeja" | "/demo/chat" | "/demo/configuracion";
   label: string;
   icon: typeof LayoutDashboard;
   exact?: boolean;
