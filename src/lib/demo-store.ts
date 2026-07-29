@@ -253,6 +253,7 @@ const createFitFlowStore = (persistName: string, seed: Seed) =>
         habitsConfigured: {},
         media: {},
         messages: {},
+        workoutProgress: {},
         setRole: (r) => set({ role: r }),
         addWorkoutTemplate: (t) =>
           set({
@@ -327,6 +328,7 @@ const createFitFlowStore = (persistName: string, seed: Seed) =>
             habitsConfigured: omit(s.habitsConfigured),
             media: omit(s.media),
             messages: omit(s.messages),
+            workoutProgress: omit(s.workoutProgress),
           });
         },
         setRoutine: (studentId, weeks) =>
@@ -393,6 +395,99 @@ const createFitFlowStore = (persistName: string, seed: Seed) =>
           const list = [...(state.messages[studentId] ?? []), { id: genId("msg"), time, ...msg }];
           set({ messages: { ...state.messages, [studentId]: list } });
         },
+        toggleSet: (studentId, dayId, exerciseId, setIndex, totalSets) => {
+          const state = get();
+          const prog = state.workoutProgress[studentId] ?? {};
+          const day = prog[dayId] ?? { exercises: {} };
+          const ex = day.exercises[exerciseId] ?? { sets: [] };
+          const sets: SetProgress[] = Array.from({ length: totalSets }, (_, i) =>
+            ex.sets[i] ?? { done: false },
+          );
+          sets[setIndex] = { ...sets[setIndex], done: !sets[setIndex].done };
+          const done = sets.every((s) => s.done);
+          const nextEx: ExerciseProgress = { ...ex, sets, done };
+          const nextDay: DayProgress = {
+            ...day,
+            exercises: { ...day.exercises, [exerciseId]: nextEx },
+          };
+          set({
+            workoutProgress: {
+              ...state.workoutProgress,
+              [studentId]: { ...prog, [dayId]: nextDay },
+            },
+          });
+        },
+        setExerciseWeight: (studentId, dayId, exerciseId, weight) => {
+          const state = get();
+          const prog = state.workoutProgress[studentId] ?? {};
+          const day = prog[dayId] ?? { exercises: {} };
+          const ex = day.exercises[exerciseId] ?? { sets: [] };
+          const nextDay: DayProgress = {
+            ...day,
+            exercises: { ...day.exercises, [exerciseId]: { ...ex, weightUsed: weight } },
+          };
+          set({
+            workoutProgress: {
+              ...state.workoutProgress,
+              [studentId]: { ...prog, [dayId]: nextDay },
+            },
+          });
+        },
+        setExerciseNote: (studentId, dayId, exerciseId, note) => {
+          const state = get();
+          const prog = state.workoutProgress[studentId] ?? {};
+          const day = prog[dayId] ?? { exercises: {} };
+          const ex = day.exercises[exerciseId] ?? { sets: [] };
+          const nextDay: DayProgress = {
+            ...day,
+            exercises: { ...day.exercises, [exerciseId]: { ...ex, note } },
+          };
+          set({
+            workoutProgress: {
+              ...state.workoutProgress,
+              [studentId]: { ...prog, [dayId]: nextDay },
+            },
+          });
+        },
+        finishDay: (studentId, dayId) => {
+          const state = get();
+          const prog = state.workoutProgress[studentId] ?? {};
+          const day = prog[dayId] ?? { exercises: {} };
+          const nextDay: DayProgress = { ...day, finishedAt: new Date().toISOString() };
+          // Also mark the routine day as done so the coach view reflects it.
+          const routines = { ...state.routines };
+          const weeks = routines[studentId];
+          if (weeks) {
+            routines[studentId] = weeks.map((w) => ({
+              ...w,
+              days: w.days.map((d) => (d.id === dayId ? { ...d, done: true } : d)),
+            }));
+          }
+          set({
+            routines,
+            workoutProgress: {
+              ...state.workoutProgress,
+              [studentId]: { ...prog, [dayId]: nextDay },
+            },
+          });
+        },
+        resetDayProgress: (studentId, dayId) => {
+          const state = get();
+          const prog = { ...(state.workoutProgress[studentId] ?? {}) };
+          delete prog[dayId];
+          const routines = { ...state.routines };
+          const weeks = routines[studentId];
+          if (weeks) {
+            routines[studentId] = weeks.map((w) => ({
+              ...w,
+              days: w.days.map((d) => (d.id === dayId ? { ...d, done: false } : d)),
+            }));
+          }
+          set({
+            routines,
+            workoutProgress: { ...state.workoutProgress, [studentId]: prog },
+          });
+        },
         resetDemo: () =>
           set({
             students: seed.students,
@@ -405,6 +500,7 @@ const createFitFlowStore = (persistName: string, seed: Seed) =>
             habitsConfigured: {},
             media: {},
             messages: {},
+            workoutProgress: {},
           }),
       }),
       {
