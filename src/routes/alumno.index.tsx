@@ -14,8 +14,10 @@ import {
   Clock,
   ArrowRight,
 } from "lucide-react";
-import { useDemoStore, parseSetsCount, type RoutineDay, type RoutineWeek } from "@/lib/demo-store";
+import { useDemoStore, parseSetsCount, type RoutineDay, type RoutineWeek, type ChatMsg } from "@/lib/demo-store";
 import { useActiveAlumnoId, getAccountProfile, displayName } from "@/lib/fitflow-mode";
+
+const EMPTY_MESSAGES: ChatMsg[] = [];
 
 export const Route = createFileRoute("/alumno/")({
   head: () => ({
@@ -58,7 +60,7 @@ function AlumnoInicio() {
     studentId ? s.students.find((x) => x.id === studentId) : undefined,
   );
   const weeks = useDemoStore((s) => (studentId ? s.routines[studentId] : undefined));
-  const messages = useDemoStore((s) => (studentId ? s.messages[studentId] ?? [] : []));
+  const messages = useDemoStore((s) => (studentId ? s.messages[studentId] : undefined)) ?? EMPTY_MESSAGES;
 
   const next = pickNextDay(weeks);
   const coachName = displayName(getAccountProfile());
