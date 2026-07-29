@@ -219,7 +219,7 @@ export function NutritionBuilder({
   const weekActions = (wi: number): ActionItem[] => [
     {
       label: "Renombrar",
-      icon: Pencil,
+      icon: <Pencil className="h-3.5 w-3.5" />,
       onClick: () => {
         const name = prompt("Nombre de la semana", draft.weeks![wi].name);
         if (name) update((p) => void (p.weeks![wi].name = name));
@@ -227,7 +227,7 @@ export function NutritionBuilder({
     },
     {
       label: "Duplicar",
-      icon: Copy,
+      icon: <Copy className="h-3.5 w-3.5" />,
       onClick: () =>
         update((p) => {
           const src = p.weeks![wi];
@@ -237,7 +237,7 @@ export function NutritionBuilder({
     },
     {
       label: "Mover a la izquierda",
-      icon: ArrowLeft,
+      icon: <ArrowLeft className="h-3.5 w-3.5" />,
       onClick: () => {
         if (wi === 0) return;
         update((p) => {
@@ -249,7 +249,7 @@ export function NutritionBuilder({
     },
     {
       label: "Mover a la derecha",
-      icon: ArrowRight,
+      icon: <ArrowRight className="h-3.5 w-3.5" />,
       onClick: () => {
         if (wi >= draft.weeks!.length - 1) return;
         update((p) => {
@@ -261,7 +261,7 @@ export function NutritionBuilder({
     },
     {
       label: "Eliminar semana",
-      icon: Trash2,
+      icon: <Trash2 className="h-3.5 w-3.5" />,
       danger: true,
       onClick: () => setConfirmDelete({ kind: "week", wi }),
     },
@@ -379,9 +379,7 @@ export function NutritionBuilder({
                   {w.name}
                 </button>
                 {activeWeekIdx === wi && (
-                  <ActionMenu items={weekActions(wi)} align="right">
-                    <MoreHorizontal className="h-3.5 w-3.5" />
-                  </ActionMenu>
+                  <ActionMenu items={weekActions(wi)} alwaysVisible />
                 )}
               </div>
             ))}
@@ -402,9 +400,7 @@ export function NutritionBuilder({
                 </option>
               ))}
             </select>
-            <ActionMenu items={weekActions(activeWeekIdx)} align="right">
-              <MoreHorizontal className="h-4 w-4" />
-            </ActionMenu>
+            <ActionMenu items={weekActions(activeWeekIdx)} alwaysVisible />
           </div>
           <div className="ml-auto">
             <button
@@ -799,10 +795,10 @@ function MealCard({
 }) {
   const [confirmDel, setConfirmDel] = useState(false);
   const actions: ActionItem[] = [
-    { label: "Subir", icon: ChevronDown, onClick: () => onMove(-1), disabled: isFirst },
-    { label: "Bajar", icon: ChevronDown, onClick: () => onMove(1), disabled: isLast },
-    { label: "Duplicar", icon: Copy, onClick: onDuplicate },
-    { label: "Eliminar", icon: Trash2, danger: true, onClick: () => setConfirmDel(true) },
+    { label: "Subir", icon: <ChevronDown className="h-3.5 w-3.5" />, onClick: () => onMove(-1), disabled: isFirst },
+    { label: "Bajar", icon: <ChevronDown className="h-3.5 w-3.5" />, onClick: () => onMove(1), disabled: isLast },
+    { label: "Duplicar", icon: <Copy className="h-3.5 w-3.5" />, onClick: onDuplicate },
+    { label: "Eliminar", icon: <Trash2 className="h-3.5 w-3.5" />, danger: true, onClick: () => setConfirmDel(true) },
   ];
 
   const updateItem = (idx: number, patch: Partial<NutritionItem>) => {
@@ -828,9 +824,7 @@ function MealCard({
           placeholder="Hora"
           className="h-9 w-28 rounded-md border border-border bg-background px-2.5 text-xs outline-none focus:border-foreground/30"
         />
-        <ActionMenu items={actions} align="right">
-          <MoreHorizontal className="h-4 w-4" />
-        </ActionMenu>
+        <ActionMenu items={actions} alwaysVisible />
       </div>
 
       <div className="mt-3 overflow-x-auto rounded-lg border border-border bg-background">
