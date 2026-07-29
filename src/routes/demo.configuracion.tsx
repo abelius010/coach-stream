@@ -118,7 +118,10 @@ function PlanTab() {
   const plan = mode === "account" ? profile?.plan ?? "gratuito" : "pro";
   const students = useDemoStore((s) => s.students);
   const limit = getPlanLimit(plan);
-  const { toasts, push, remove } = useToasts();
+  const [toasts, setToasts] = useState<ToastData[]>([]);
+  const push = (text: string) =>
+    setToasts((t) => [...t, { id: Date.now() + Math.random(), text }]);
+  const remove = (id: number) => setToasts((t) => t.filter((x) => x.id !== id));
 
   const usage = useMemo(() => {
     if (limit === null) return `${students.length} alumnos`;
