@@ -173,7 +173,10 @@ export const useDemoStore = create<State>()(
           students: get().students.map((s) => (s.id === id ? { ...s, ...patch } : s)),
         }),
       removeStudent: (id) => set({ students: get().students.filter((s) => s.id !== id) }),
-      resetDemo: () => set({ students: seedStudents as StudentExt[] }),
+      routines: {},
+      setRoutine: (studentId, weeks) =>
+        set({ routines: { ...get().routines, [studentId]: weeks } }),
+      resetDemo: () => set({ students: seedStudents as StudentExt[], routines: {} }),
     }),
     {
       name: "fitflow-demo",
