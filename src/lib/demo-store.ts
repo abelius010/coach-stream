@@ -98,6 +98,15 @@ export type DayProgress = {
 };
 export type WorkoutProgress = Record<string, DayProgress>;
 
+export type MealLog = {
+  photo?: string | null;
+  photoAt?: string;
+  done?: boolean;
+  note?: string;
+};
+// Keyed by mealId (plan-level) so the same plan meal aggregates today's log.
+export type NutritionProgress = Record<string, MealLog>;
+
 export const parseSetsCount = (sets: string): number => {
   const n = parseInt(sets, 10);
   return Number.isFinite(n) && n > 0 ? Math.min(n, 12) : 1;
