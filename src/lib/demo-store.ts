@@ -27,8 +27,19 @@ export type NewStudentInput = Omit<StudentExt, "id" | "avatar" | "compliance" | 
   status?: Student["status"];
 };
 
+export type DemoRole = "coach" | "student";
+
+export type WorkoutTemplate = { id: string; name: string; createdAt: string; summary: string };
+export type NutritionTemplate = { id: string; name: string; createdAt: string; summary: string };
+
 type State = {
   students: StudentExt[];
+  role: DemoRole;
+  workoutTemplates: WorkoutTemplate[];
+  nutritionTemplates: NutritionTemplate[];
+  setRole: (r: DemoRole) => void;
+  addWorkoutTemplate: (t: Omit<WorkoutTemplate, "id" | "createdAt">) => void;
+  addNutritionTemplate: (t: Omit<NutritionTemplate, "id" | "createdAt">) => void;
   addStudent: (input: NewStudentInput) => string;
   updateStudent: (id: string, patch: Partial<StudentExt>) => void;
   removeStudent: (id: string) => void;
