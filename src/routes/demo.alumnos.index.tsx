@@ -30,26 +30,8 @@ const filterLabel: Record<FilterKey, string> = {
 
 function AlumnosList() {
   const students = useDemoStore((s) => s.students);
-  const role = useDemoStore((s) => s.role);
-  const removeStudent = useDemoStore((s) => s.removeStudent);
-  const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<FilterKey>("todos");
-  const [toDelete, setToDelete] = useState<StudentExt | null>(null);
-  const [toEdit, setToEdit] = useState<StudentExt | null>(null);
-  const [toasts, setToasts] = useState<ToastData[]>([]);
-  const pushToast = (text: string) =>
-    setToasts((prev) => [...prev, { id: Date.now() + Math.random(), text }]);
-  const dismissToast = (tid: number) => setToasts((prev) => prev.filter((t) => t.id !== tid));
-
-  useEffect(() => {
-    try {
-      if (sessionStorage.getItem("fitflow-student-deleted")) {
-        sessionStorage.removeItem("fitflow-student-deleted");
-        pushToast("Alumno eliminado correctamente.");
-      }
-    } catch {}
-  }, []);
 
   const filtered = useMemo(() => {
     const now = Date.now();
