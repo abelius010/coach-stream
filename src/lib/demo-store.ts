@@ -184,6 +184,7 @@ type State = {
   media: Record<string, MediaFile[]>;
   messages: Record<string, ChatMsg[]>;
   workoutProgress: Record<string, WorkoutProgress>;
+  nutritionProgress: Record<string, NutritionProgress>;
   setRole: (r: DemoRole) => void;
   addWorkoutTemplate: (t: Omit<WorkoutTemplate, "id" | "createdAt">) => void;
   addNutritionTemplate: (t: Omit<NutritionTemplate, "id" | "createdAt">) => void;
