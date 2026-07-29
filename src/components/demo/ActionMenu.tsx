@@ -34,12 +34,28 @@ export function ActionMenu({
     };
   }, [open]);
 
+  const stop = (e: React.SyntheticEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+  };
+
   return (
-    <div ref={ref} className="relative">
+    <div
+      ref={ref}
+      className="relative"
+      onClick={stop}
+      onMouseDown={stop}
+      onPointerDown={stop}
+    >
       <button
         type="button"
         aria-label={label}
-        onClick={() => setOpen((v) => !v)}
+        onClick={(e) => {
+          stop(e);
+          setOpen((v) => !v);
+        }}
+        onMouseDown={stop}
+        onPointerDown={stop}
         className={`grid h-8 w-8 place-items-center rounded-lg border border-border bg-background text-ink-muted transition-all hover:bg-surface hover:text-foreground focus:outline-none focus:ring-2 focus:ring-foreground/10 ${
           alwaysVisible || open
             ? "opacity-100"
@@ -51,13 +67,20 @@ export function ActionMenu({
       {open && (
         <div
           role="menu"
+          onClick={stop}
+          onMouseDown={stop}
+          onPointerDown={stop}
           className="absolute right-0 z-30 mt-1.5 w-56 origin-top-right animate-scale-in overflow-hidden rounded-xl border border-border bg-background p-1 shadow-lg shadow-black/5"
         >
           {items.map((item, i) => (
             <button
               key={i}
+              type="button"
               role="menuitem"
-              onClick={() => {
+              onMouseDown={stop}
+              onPointerDown={stop}
+              onClick={(e) => {
+                stop(e);
                 setOpen(false);
                 item.onClick();
               }}
