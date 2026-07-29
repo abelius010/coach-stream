@@ -27,6 +27,8 @@ import {
 } from "../lib/demo-data";
 import { useDemoStore } from "../lib/demo-store";
 import { EditStudentSheet } from "../components/demo/EditStudentSheet";
+import { TabActions, EmptyDeletedState } from "../components/demo/TabActions";
+import { ToastStack, type ToastData } from "../components/demo/Toast";
 
 export const Route = createFileRoute("/demo/alumnos/$id")({
   loader: ({ params }) => ({ id: params.id }),
