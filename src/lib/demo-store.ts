@@ -53,11 +53,29 @@ export type NutritionMeal = {
   notes: string;
   items: NutritionItem[];
 };
+export type NutritionDay = { id: string; day: string; meals: NutritionMeal[] };
+export type NutritionWeek = { id: string; name: string; days: NutritionDay[] };
 export type NutritionPlanData = {
+  name?: string;
+  objective?: string;
+  startDate?: string;
+  notes?: string;
+  status?: "draft" | "active";
   targets: { kcal: number; protein: number; carbs: number; fat: number };
   meals: NutritionMeal[];
+  weeks?: NutritionWeek[];
   coachNote: string;
 };
+
+export const WEEKDAYS = [
+  "Lunes",
+  "Martes",
+  "Miércoles",
+  "Jueves",
+  "Viernes",
+  "Sábado",
+  "Domingo",
+] as const;
 
 export type WeightLog = { id: string; date: string; kg: number };
 export type ReviewMeasurements = {
@@ -208,13 +226,35 @@ export const starterRoutine = (): RoutineWeek[] => [
   },
 ];
 
+export const starterNutritionWeek = (name: string): NutritionWeek => ({
+  id: genId("nwk"),
+  name,
+  days: WEEKDAYS.map((d) => ({ id: genId("nday"), day: d, meals: [] })),
+});
+
 export const starterNutritionPlan = (): NutritionPlanData => ({
+  name: "",
+  objective: "",
+  startDate: "",
+  notes: "",
+  status: "draft",
   targets: { kcal: 0, protein: 0, carbs: 0, fat: 0 },
   coachNote: "",
   meals: [
     { id: genId("meal"), name: "Desayuno", time: "", photo: null, notes: "", items: [] },
   ],
+  weeks: [starterNutritionWeek("Semana 1")],
 });
+
+// Given a plan with weeks, return the meals for today's weekday from week 1
+// (Monday = 0). Used to keep the student's "today" view consistent with the
+// weekly builder.
+export const mealsForToday = (plan: NutritionPlanData): NutritionMeal[] => {
+  if (!plan.weeks || plan.weeks.length === 0) return plan.meals;
+  const jsDay = new Date().getDay(); // 0=Sun..6=Sat
+  const idx = (jsDay + 6) % 7; // 0=Mon..6=Sun
+  return plan.weeks[0].days[idx]?.meals ?? [];
+};
 
 type State = {
   students: StudentExt[];

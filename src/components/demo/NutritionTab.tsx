@@ -20,7 +20,7 @@ import {
   type HabitLog,
   type NutritionDaySnapshot,
 } from "../../lib/demo-store";
-import { NutritionPlan } from "./NutritionPlan";
+import { NutritionBuilder } from "./NutritionBuilder";
 import { Modal } from "./Modal";
 
 type View = "seguimiento" | "galeria" | "plan";
@@ -134,7 +134,7 @@ export function NutritionTab({
         )}
       </div>
 
-      {view === "plan" && <NutritionPlan studentId={studentId} onToast={onToast} />}
+      {view === "plan" && <NutritionBuilder studentId={studentId} onToast={onToast} />}
 
       {view === "seguimiento" && (
         <SeguimientoView
