@@ -43,6 +43,21 @@ export type RoutineExercise = {
 export type RoutineDay = { id: string; day: string; done?: boolean; exercises: RoutineExercise[] };
 export type RoutineWeek = { id: string; week: string; days: RoutineDay[] };
 
+export type NutritionItem = { id: string; name: string; qty: string; unit: string };
+export type NutritionMeal = {
+  id: string;
+  name: string;
+  time?: string;
+  photo?: string | null;
+  notes: string;
+  items: NutritionItem[];
+};
+export type NutritionPlanData = {
+  targets: { kcal: number; protein: number; carbs: number; fat: number };
+  meals: NutritionMeal[];
+  coachNote: string;
+};
+
 export const genId = (prefix: string) =>
   `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 
