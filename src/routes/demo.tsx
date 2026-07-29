@@ -124,6 +124,7 @@ function DemoLayout() {
           })}
         </nav>
         <main className="flex-1 bg-surface">
+          <DemoBanner />
           <Outlet />
         </main>
       </div>
