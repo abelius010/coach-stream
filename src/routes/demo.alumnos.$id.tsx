@@ -1,9 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   MessageSquare,
-  MoreHorizontal,
   Dumbbell,
   Utensils,
   TrendingUp,
@@ -36,6 +35,8 @@ import {
 } from "../lib/demo-store";
 import { EditStudentSheet } from "../components/demo/EditStudentSheet";
 import { TabActions, EmptyDeletedState } from "../components/demo/TabActions";
+import { ActionMenu, type ActionItem } from "../components/demo/ActionMenu";
+import { DeleteStudentDialog } from "../components/demo/DeleteStudentDialog";
 import { ToastStack, type ToastData } from "../components/demo/Toast";
 import { WorkoutRoutine } from "../components/demo/WorkoutRoutine";
 import { NutritionPlan } from "../components/demo/NutritionPlan";
@@ -66,9 +67,13 @@ function StudentDetail() {
   const nutrition = useDemoStore((s) => s.nutritionPlans[id]);
   const reviewsRaw = useDemoStore((s) => s.reviews[id]); const reviews = reviewsRaw ?? [];
   const habitsConfigured = useDemoStore((s) => s.habitsConfigured[id]);
+  const role = useDemoStore((s) => s.role);
+  const removeStudent = useDemoStore((s) => s.removeStudent);
+  const navigate = useNavigate();
 
   const [tab, setTab] = useState<TabId>("resumen");
   const [editing, setEditing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [toasts, setToasts] = useState<ToastData[]>([]);
   const [workoutDeleted, setWorkoutDeleted] = useState(false);
   const [nutritionDeleted, setNutritionDeleted] = useState(false);
@@ -136,9 +141,25 @@ function StudentDetail() {
             <button onClick={() => setTab("chat")} className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-sm hover:bg-surface">
               <MessageSquare className="h-3.5 w-3.5" /> Mensaje
             </button>
-            <button className="grid h-9 w-9 place-items-center rounded-lg border border-border hover:bg-surface">
-              <MoreHorizontal className="h-4 w-4" />
-            </button>
+            {role === "coach" && (
+              <ActionMenu
+                alwaysVisible
+                label="Acciones del alumno"
+                items={[
+                  {
+                    icon: <Pencil className="h-3.5 w-3.5" />,
+                    label: "Editar alumno",
+                    onClick: () => setEditing(true),
+                  },
+                  {
+                    icon: <Trash2 className="h-3.5 w-3.5" />,
+                    label: "Eliminar alumno",
+                    onClick: () => setConfirmDelete(true),
+                    danger: true,
+                  },
+                ]}
+              />
+            )}
           </div>
         </div>
       </div>
@@ -226,6 +247,19 @@ function StudentDetail() {
         {tab === "chat" && <ChatTab student={student} isNew={isNew} />}
       </div>
       <EditStudentSheet student={student} open={editing} onClose={() => setEditing(false)} />
+      <DeleteStudentDialog
+        open={confirmDelete}
+        studentName={student.name}
+        onClose={() => setConfirmDelete(false)}
+        onConfirm={() => {
+          setConfirmDelete(false);
+          try {
+            sessionStorage.setItem("fitflow-student-deleted", "1");
+          } catch {}
+          removeStudent(student.id);
+          navigate({ to: "/demo/alumnos" });
+        }}
+      />
       <ToastStack toasts={toasts} onDismiss={dismissToast} />
     </div>
   );

@@ -1,7 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { Filter, Plus, Search } from "lucide-react";
-import { useMemo, useState } from "react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { Eye, Filter, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { useDemoStore, type StudentExt } from "../lib/demo-store";
+import { ActionMenu, type ActionItem } from "../components/demo/ActionMenu";
+import { DeleteStudentDialog } from "../components/demo/DeleteStudentDialog";
+import { EditStudentSheet } from "../components/demo/EditStudentSheet";
+import { ToastStack, type ToastData } from "../components/demo/Toast";
 
 export const Route = createFileRoute("/demo/alumnos/")({
   component: AlumnosList,
@@ -30,8 +34,26 @@ const filterLabel: Record<FilterKey, string> = {
 
 function AlumnosList() {
   const students = useDemoStore((s) => s.students);
+  const role = useDemoStore((s) => s.role);
+  const removeStudent = useDemoStore((s) => s.removeStudent);
+  const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<FilterKey>("todos");
+  const [toDelete, setToDelete] = useState<StudentExt | null>(null);
+  const [toEdit, setToEdit] = useState<StudentExt | null>(null);
+  const [toasts, setToasts] = useState<ToastData[]>([]);
+  const pushToast = (text: string) =>
+    setToasts((prev) => [...prev, { id: Date.now() + Math.random(), text }]);
+  const dismissToast = (tid: number) => setToasts((prev) => prev.filter((t) => t.id !== tid));
+
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem("fitflow-student-deleted")) {
+        sessionStorage.removeItem("fitflow-student-deleted");
+        pushToast("Alumno eliminado correctamente.");
+      }
+    } catch {}
+  }, []);
 
   const filtered = useMemo(() => {
     const now = Date.now();
@@ -110,43 +132,84 @@ function AlumnosList() {
           </div>
         ) : (
           <ul className="divide-y divide-border">
-            {filtered.map((s) => (
-              <li key={s.id}>
-                <Link
-                  to="/demo/alumnos/$id"
-                  params={{ id: s.id }}
-                  className="grid grid-cols-2 items-center gap-4 px-5 py-3 hover:bg-surface/50 md:grid-cols-12"
-                >
-                  <div className="col-span-2 flex items-center gap-3 md:col-span-4">
-                    <img src={s.avatar} alt="" className="h-10 w-10 rounded-full object-cover" />
-                    <div className="min-w-0">
-                      <div className="truncate text-sm font-medium">{s.name}</div>
-                      <div className="truncate text-xs text-ink-muted md:hidden">{s.goal}</div>
+            {filtered.map((s) => {
+              const menuItems: ActionItem[] = [
+                {
+                  icon: <Eye className="h-3.5 w-3.5" />,
+                  label: "Ver alumno",
+                  onClick: () => navigate({ to: "/demo/alumnos/$id", params: { id: s.id } }),
+                },
+                {
+                  icon: <Pencil className="h-3.5 w-3.5" />,
+                  label: "Editar alumno",
+                  onClick: () => setToEdit(s),
+                },
+                {
+                  icon: <Trash2 className="h-3.5 w-3.5" />,
+                  label: "Eliminar alumno",
+                  onClick: () => setToDelete(s),
+                  danger: true,
+                },
+              ];
+              return (
+                <li key={s.id} className="group relative">
+                  <Link
+                    to="/demo/alumnos/$id"
+                    params={{ id: s.id }}
+                    className={`grid grid-cols-2 items-center gap-4 px-5 py-3 hover:bg-surface/50 md:grid-cols-12 ${role === "coach" ? "pr-14" : ""}`}
+                  >
+                    <div className="col-span-2 flex items-center gap-3 md:col-span-4">
+                      <img src={s.avatar} alt="" className="h-10 w-10 rounded-full object-cover" />
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-medium">{s.name}</div>
+                        <div className="truncate text-xs text-ink-muted md:hidden">{s.goal}</div>
+                      </div>
                     </div>
-                  </div>
-                  <div className="hidden text-sm text-ink-muted md:col-span-2 md:block">{s.goal}</div>
-                  <div className="hidden text-right text-sm md:col-span-1 md:block">{s.weight} kg</div>
-                  <div className="col-span-1 md:col-span-2">
-                    <span className={`inline-flex rounded-md px-2 py-0.5 text-[11px] font-medium ${statusStyle[s.status]}`}>
-                      {statusLabel[s.status]}
-                    </span>
-                  </div>
-                  <div className="hidden text-sm text-ink-muted md:col-span-2 md:block">{s.lastActive}</div>
-                  <div className="col-span-1 text-right">
-                    <div className="text-sm font-semibold">{s.compliance}%</div>
-                    <div className="mt-1 h-1 w-14 overflow-hidden rounded-full bg-surface md:ml-auto">
-                      <div
-                        className={`h-full ${s.compliance >= 85 ? "bg-emerald-500" : s.compliance >= 65 ? "bg-amber-500" : "bg-rose-500"}`}
-                        style={{ width: `${s.compliance}%` }}
-                      />
+                    <div className="hidden text-sm text-ink-muted md:col-span-2 md:block">{s.goal}</div>
+                    <div className="hidden text-right text-sm md:col-span-1 md:block">{s.weight} kg</div>
+                    <div className="col-span-1 md:col-span-2">
+                      <span className={`inline-flex rounded-md px-2 py-0.5 text-[11px] font-medium ${statusStyle[s.status]}`}>
+                        {statusLabel[s.status]}
+                      </span>
                     </div>
-                  </div>
-                </Link>
-              </li>
-            ))}
+                    <div className="hidden text-sm text-ink-muted md:col-span-2 md:block">{s.lastActive}</div>
+                    <div className="col-span-1 text-right">
+                      <div className="text-sm font-semibold">{s.compliance}%</div>
+                      <div className="mt-1 h-1 w-14 overflow-hidden rounded-full bg-surface md:ml-auto">
+                        <div
+                          className={`h-full ${s.compliance >= 85 ? "bg-emerald-500" : s.compliance >= 65 ? "bg-amber-500" : "bg-rose-500"}`}
+                          style={{ width: `${s.compliance}%` }}
+                        />
+                      </div>
+                    </div>
+                  </Link>
+                  {role === "coach" && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <ActionMenu items={menuItems} alwaysVisible label={`Acciones de ${s.name}`} />
+                    </div>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
+
+      {toEdit && (
+        <EditStudentSheet student={toEdit} open={!!toEdit} onClose={() => setToEdit(null)} />
+      )}
+      <DeleteStudentDialog
+        open={!!toDelete}
+        studentName={toDelete?.name ?? ""}
+        onClose={() => setToDelete(null)}
+        onConfirm={() => {
+          if (!toDelete) return;
+          removeStudent(toDelete.id);
+          setToDelete(null);
+          pushToast("Alumno eliminado correctamente.");
+        }}
+      />
+      <ToastStack toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
 }

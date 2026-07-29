@@ -268,7 +268,23 @@ export const useDemoStore = create<State>()(
         set({
           students: get().students.map((s) => (s.id === id ? { ...s, ...patch } : s)),
         }),
-      removeStudent: (id) => set({ students: get().students.filter((s) => s.id !== id) }),
+      removeStudent: (id) => {
+        const s = get();
+        const omit = <T,>(r: Record<string, T>) => {
+          const { [id]: _drop, ...rest } = r;
+          return rest;
+        };
+        set({
+          students: s.students.filter((x) => x.id !== id),
+          routines: omit(s.routines),
+          nutritionPlans: omit(s.nutritionPlans),
+          weightLogs: omit(s.weightLogs),
+          reviews: omit(s.reviews),
+          habitsConfigured: omit(s.habitsConfigured),
+          media: omit(s.media),
+          messages: omit(s.messages),
+        });
+      },
       setRoutine: (studentId, weeks) =>
         set({ routines: { ...get().routines, [studentId]: weeks } }),
       setNutritionPlan: (studentId, plan) =>
