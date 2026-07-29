@@ -411,23 +411,42 @@ function NutritionEditor({
         </div>
       ))}
 
-      <button
-        onClick={() =>
-          update((p) =>
-            p.meals.push({
-              id: genId("meal"),
-              name: nextDefaultName(),
-              time: "",
-              photo: null,
-              notes: "",
-              items: [],
-            }),
-          )
-        }
-        className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-border bg-background px-3 py-2 text-sm text-ink-muted hover:bg-surface hover:text-foreground"
-      >
-        <Plus className="h-4 w-4" /> Añadir comida
-      </button>
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() =>
+            update((p) =>
+              p.meals.push({
+                id: genId("meal"),
+                name: nextDefaultName(),
+                time: "",
+                photo: null,
+                notes: "",
+                items: [],
+              }),
+            )
+          }
+          className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-border bg-background px-3 py-2 text-sm text-ink-muted hover:bg-surface hover:text-foreground"
+        >
+          <Plus className="h-4 w-4" /> Añadir comida
+        </button>
+        <button
+          onClick={() =>
+            update((p) =>
+              p.meals.push({
+                id: genId("meal"),
+                name: "Comida libre",
+                time: "",
+                photo: null,
+                notes: "El alumno elige qué comer. Registrará la foto para hacer seguimiento.",
+                items: [],
+              }),
+            )
+          }
+          className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-border bg-background px-3 py-2 text-sm text-ink-muted hover:bg-surface hover:text-foreground"
+        >
+          <Plus className="h-4 w-4" /> Añadir comida libre
+        </button>
+      </div>
 
       <Modal
         open={confirm !== null}
