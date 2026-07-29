@@ -31,7 +31,7 @@ export const Route = createFileRoute("/demo")({
 });
 
 type NavItem = {
-  to: "/demo" | "/demo/alumnos" | "/demo/bandeja" | "/demo/chat";
+  to: "/demo" | "/demo/alumnos" | "/demo/bandeja" | "/demo/chat" | "/demo/configuracion";
   label: string;
   icon: typeof LayoutDashboard;
   exact?: boolean;
@@ -62,6 +62,7 @@ function DemoLayout() {
       icon: MessageSquare,
       badge: isDemo ? 4 : pendingMessages || undefined,
     },
+    { to: "/demo/configuracion", label: "Configuración", icon: Settings },
   ];
 
   const coachName = isDemo ? "Carlos Ruiz" : displayName(profile);

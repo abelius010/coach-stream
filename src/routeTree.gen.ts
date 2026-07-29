@@ -13,6 +13,7 @@ import { Route as RegistroRouteImport } from './routes/registro'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DemoIndexRouteImport } from './routes/demo.index'
+import { Route as DemoConfiguracionRouteImport } from './routes/demo.configuracion'
 import { Route as DemoChatRouteImport } from './routes/demo.chat'
 import { Route as DemoBandejaRouteImport } from './routes/demo.bandeja'
 import { Route as DemoAlumnosIndexRouteImport } from './routes/demo.alumnos.index'
@@ -37,6 +38,11 @@ const IndexRoute = IndexRouteImport.update({
 const DemoIndexRoute = DemoIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => DemoRoute,
+} as any)
+const DemoConfiguracionRoute = DemoConfiguracionRouteImport.update({
+  id: '/configuracion',
+  path: '/configuracion',
   getParentRoute: () => DemoRoute,
 } as any)
 const DemoChatRoute = DemoChatRouteImport.update({
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/registro': typeof RegistroRoute
   '/demo/bandeja': typeof DemoBandejaRoute
   '/demo/chat': typeof DemoChatRoute
+  '/demo/configuracion': typeof DemoConfiguracionRoute
   '/demo/': typeof DemoIndexRoute
   '/demo/alumnos/$id': typeof DemoAlumnosIdRoute
   '/demo/alumnos/nuevo': typeof DemoAlumnosNuevoRoute
@@ -81,6 +88,7 @@ export interface FileRoutesByTo {
   '/registro': typeof RegistroRoute
   '/demo/bandeja': typeof DemoBandejaRoute
   '/demo/chat': typeof DemoChatRoute
+  '/demo/configuracion': typeof DemoConfiguracionRoute
   '/demo': typeof DemoIndexRoute
   '/demo/alumnos/$id': typeof DemoAlumnosIdRoute
   '/demo/alumnos/nuevo': typeof DemoAlumnosNuevoRoute
@@ -93,6 +101,7 @@ export interface FileRoutesById {
   '/registro': typeof RegistroRoute
   '/demo/bandeja': typeof DemoBandejaRoute
   '/demo/chat': typeof DemoChatRoute
+  '/demo/configuracion': typeof DemoConfiguracionRoute
   '/demo/': typeof DemoIndexRoute
   '/demo/alumnos/$id': typeof DemoAlumnosIdRoute
   '/demo/alumnos/nuevo': typeof DemoAlumnosNuevoRoute
@@ -106,6 +115,7 @@ export interface FileRouteTypes {
     | '/registro'
     | '/demo/bandeja'
     | '/demo/chat'
+    | '/demo/configuracion'
     | '/demo/'
     | '/demo/alumnos/$id'
     | '/demo/alumnos/nuevo'
@@ -116,6 +126,7 @@ export interface FileRouteTypes {
     | '/registro'
     | '/demo/bandeja'
     | '/demo/chat'
+    | '/demo/configuracion'
     | '/demo'
     | '/demo/alumnos/$id'
     | '/demo/alumnos/nuevo'
@@ -127,6 +138,7 @@ export interface FileRouteTypes {
     | '/registro'
     | '/demo/bandeja'
     | '/demo/chat'
+    | '/demo/configuracion'
     | '/demo/'
     | '/demo/alumnos/$id'
     | '/demo/alumnos/nuevo'
@@ -167,6 +179,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/demo/'
       preLoaderRoute: typeof DemoIndexRouteImport
+      parentRoute: typeof DemoRoute
+    }
+    '/demo/configuracion': {
+      id: '/demo/configuracion'
+      path: '/configuracion'
+      fullPath: '/demo/configuracion'
+      preLoaderRoute: typeof DemoConfiguracionRouteImport
       parentRoute: typeof DemoRoute
     }
     '/demo/chat': {
@@ -210,6 +229,7 @@ declare module '@tanstack/react-router' {
 interface DemoRouteChildren {
   DemoBandejaRoute: typeof DemoBandejaRoute
   DemoChatRoute: typeof DemoChatRoute
+  DemoConfiguracionRoute: typeof DemoConfiguracionRoute
   DemoIndexRoute: typeof DemoIndexRoute
   DemoAlumnosIdRoute: typeof DemoAlumnosIdRoute
   DemoAlumnosNuevoRoute: typeof DemoAlumnosNuevoRoute
@@ -219,6 +239,7 @@ interface DemoRouteChildren {
 const DemoRouteChildren: DemoRouteChildren = {
   DemoBandejaRoute: DemoBandejaRoute,
   DemoChatRoute: DemoChatRoute,
+  DemoConfiguracionRoute: DemoConfiguracionRoute,
   DemoIndexRoute: DemoIndexRoute,
   DemoAlumnosIdRoute: DemoAlumnosIdRoute,
   DemoAlumnosNuevoRoute: DemoAlumnosNuevoRoute,
