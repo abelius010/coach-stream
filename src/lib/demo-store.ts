@@ -174,6 +174,7 @@ type State = {
   habitsConfigured: Record<string, boolean>;
   media: Record<string, MediaFile[]>;
   messages: Record<string, ChatMsg[]>;
+  workoutProgress: Record<string, WorkoutProgress>;
   setRole: (r: DemoRole) => void;
   addWorkoutTemplate: (t: Omit<WorkoutTemplate, "id" | "createdAt">) => void;
   addNutritionTemplate: (t: Omit<NutritionTemplate, "id" | "createdAt">) => void;
@@ -188,6 +189,11 @@ type State = {
   addMedia: (studentId: string, file: Omit<MediaFile, "id" | "uploadedAt">) => void;
   removeMedia: (studentId: string, fileId: string) => void;
   sendMessage: (studentId: string, msg: Omit<ChatMsg, "id" | "time">) => void;
+  toggleSet: (studentId: string, dayId: string, exerciseId: string, setIndex: number, totalSets: number) => void;
+  setExerciseWeight: (studentId: string, dayId: string, exerciseId: string, weight: string) => void;
+  setExerciseNote: (studentId: string, dayId: string, exerciseId: string, note: string) => void;
+  finishDay: (studentId: string, dayId: string) => void;
+  resetDayProgress: (studentId: string, dayId: string) => void;
   resetDemo: () => void;
 };
 
