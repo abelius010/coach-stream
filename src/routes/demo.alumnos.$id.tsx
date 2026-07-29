@@ -18,7 +18,6 @@ import {
 import {
   students as seedStudents,
   workoutWeeks,
-  nutritionPlan,
   weightSeries,
   habitsData,
   measurements,
