@@ -19,6 +19,8 @@ import {
   isNewStudent,
   genId,
   type RoutineWeek,
+  type RoutineDay,
+  type RoutineExercise,
 } from "../../lib/demo-store";
 import { Modal, ModalButton } from "./Modal";
 
