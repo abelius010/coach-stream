@@ -4,8 +4,43 @@ export type FitFlowMode = "demo" | "account";
 
 const KEY = "fitflow-mode";
 const PROFILE_KEY = "fitflow-account-profile";
+const ACTIVE_ALUMNO_KEY = "fitflow-active-alumno";
 
 const listeners = new Set<() => void>();
+const alumnoListeners = new Set<() => void>();
+
+const readActiveAlumnoId = (): string | null => {
+  if (typeof window === "undefined") return null;
+  try {
+    return localStorage.getItem(ACTIVE_ALUMNO_KEY);
+  } catch {
+    return null;
+  }
+};
+
+let cachedAlumnoId: string | null = readActiveAlumnoId();
+
+export const getActiveAlumnoId = (): string | null => cachedAlumnoId;
+
+export const setActiveAlumnoId = (id: string | null) => {
+  cachedAlumnoId = id;
+  try {
+    if (id) localStorage.setItem(ACTIVE_ALUMNO_KEY, id);
+    else localStorage.removeItem(ACTIVE_ALUMNO_KEY);
+  } catch {}
+  alumnoListeners.forEach((l) => l());
+};
+
+const subscribeAlumno = (cb: () => void) => {
+  alumnoListeners.add(cb);
+  return () => {
+    alumnoListeners.delete(cb);
+  };
+};
+
+export const useActiveAlumnoId = (): string | null =>
+  useSyncExternalStore(subscribeAlumno, getActiveAlumnoId, () => null);
+
 
 const readMode = (): FitFlowMode => {
   if (typeof window === "undefined") return "demo";
