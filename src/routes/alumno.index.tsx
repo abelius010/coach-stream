@@ -58,7 +58,7 @@ function AlumnoInicio() {
     studentId ? s.students.find((x) => x.id === studentId) : undefined,
   );
   const weeks = useDemoStore((s) => (studentId ? s.routines[studentId] : undefined));
-  const messages = useDemoStore((s) => (studentId ? s.messages[studentId] ?? [] : []));
+  const messages = useDemoStore((s) => (studentId ? s.messages[studentId] : undefined)) ?? EMPTY_MESSAGES;
 
   const next = pickNextDay(weeks);
   const coachName = displayName(getAccountProfile());
