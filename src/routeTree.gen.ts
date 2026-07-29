@@ -15,6 +15,7 @@ import { Route as DemoIndexRouteImport } from './routes/demo.index'
 import { Route as DemoChatRouteImport } from './routes/demo.chat'
 import { Route as DemoBandejaRouteImport } from './routes/demo.bandeja'
 import { Route as DemoAlumnosIndexRouteImport } from './routes/demo.alumnos.index'
+import { Route as DemoAlumnosNuevoRouteImport } from './routes/demo.alumnos.nuevo'
 import { Route as DemoAlumnosIdRouteImport } from './routes/demo.alumnos.$id'
 
 const DemoRoute = DemoRouteImport.update({
@@ -47,6 +48,11 @@ const DemoAlumnosIndexRoute = DemoAlumnosIndexRouteImport.update({
   path: '/alumnos/',
   getParentRoute: () => DemoRoute,
 } as any)
+const DemoAlumnosNuevoRoute = DemoAlumnosNuevoRouteImport.update({
+  id: '/alumnos/nuevo',
+  path: '/alumnos/nuevo',
+  getParentRoute: () => DemoRoute,
+} as any)
 const DemoAlumnosIdRoute = DemoAlumnosIdRouteImport.update({
   id: '/alumnos/$id',
   path: '/alumnos/$id',
@@ -60,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/demo/chat': typeof DemoChatRoute
   '/demo/': typeof DemoIndexRoute
   '/demo/alumnos/$id': typeof DemoAlumnosIdRoute
+  '/demo/alumnos/nuevo': typeof DemoAlumnosNuevoRoute
   '/demo/alumnos/': typeof DemoAlumnosIndexRoute
 }
 export interface FileRoutesByTo {
@@ -68,6 +75,7 @@ export interface FileRoutesByTo {
   '/demo/chat': typeof DemoChatRoute
   '/demo': typeof DemoIndexRoute
   '/demo/alumnos/$id': typeof DemoAlumnosIdRoute
+  '/demo/alumnos/nuevo': typeof DemoAlumnosNuevoRoute
   '/demo/alumnos': typeof DemoAlumnosIndexRoute
 }
 export interface FileRoutesById {
@@ -78,6 +86,7 @@ export interface FileRoutesById {
   '/demo/chat': typeof DemoChatRoute
   '/demo/': typeof DemoIndexRoute
   '/demo/alumnos/$id': typeof DemoAlumnosIdRoute
+  '/demo/alumnos/nuevo': typeof DemoAlumnosNuevoRoute
   '/demo/alumnos/': typeof DemoAlumnosIndexRoute
 }
 export interface FileRouteTypes {
@@ -89,6 +98,7 @@ export interface FileRouteTypes {
     | '/demo/chat'
     | '/demo/'
     | '/demo/alumnos/$id'
+    | '/demo/alumnos/nuevo'
     | '/demo/alumnos/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -97,6 +107,7 @@ export interface FileRouteTypes {
     | '/demo/chat'
     | '/demo'
     | '/demo/alumnos/$id'
+    | '/demo/alumnos/nuevo'
     | '/demo/alumnos'
   id:
     | '__root__'
@@ -106,6 +117,7 @@ export interface FileRouteTypes {
     | '/demo/chat'
     | '/demo/'
     | '/demo/alumnos/$id'
+    | '/demo/alumnos/nuevo'
     | '/demo/alumnos/'
   fileRoutesById: FileRoutesById
 }
@@ -158,6 +170,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoAlumnosIndexRouteImport
       parentRoute: typeof DemoRoute
     }
+    '/demo/alumnos/nuevo': {
+      id: '/demo/alumnos/nuevo'
+      path: '/alumnos/nuevo'
+      fullPath: '/demo/alumnos/nuevo'
+      preLoaderRoute: typeof DemoAlumnosNuevoRouteImport
+      parentRoute: typeof DemoRoute
+    }
     '/demo/alumnos/$id': {
       id: '/demo/alumnos/$id'
       path: '/alumnos/$id'
@@ -173,6 +192,7 @@ interface DemoRouteChildren {
   DemoChatRoute: typeof DemoChatRoute
   DemoIndexRoute: typeof DemoIndexRoute
   DemoAlumnosIdRoute: typeof DemoAlumnosIdRoute
+  DemoAlumnosNuevoRoute: typeof DemoAlumnosNuevoRoute
   DemoAlumnosIndexRoute: typeof DemoAlumnosIndexRoute
 }
 
@@ -181,6 +201,7 @@ const DemoRouteChildren: DemoRouteChildren = {
   DemoChatRoute: DemoChatRoute,
   DemoIndexRoute: DemoIndexRoute,
   DemoAlumnosIdRoute: DemoAlumnosIdRoute,
+  DemoAlumnosNuevoRoute: DemoAlumnosNuevoRoute,
   DemoAlumnosIndexRoute: DemoAlumnosIndexRoute,
 }
 

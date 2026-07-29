@@ -24,7 +24,6 @@ export function EditStudentSheet({ student, open, onClose }: { student: StudentE
       status: form.status,
       email: form.email,
       phone: form.phone,
-      goal2: undefined as never,
       coachNotes: form.coachNotes,
     });
     onClose();

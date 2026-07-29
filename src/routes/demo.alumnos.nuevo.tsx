@@ -122,7 +122,7 @@ function NuevoAlumno() {
       birthDate: draft.birthDate || undefined,
       age: draft.age ? Number(draft.age) : (draft.birthDate ? Math.max(0, new Date().getFullYear() - new Date(draft.birthDate).getFullYear()) : 0),
       sex: (draft.sex || undefined) as NewStudentInput["sex"],
-      startDate: draft.startDate ? new Date(draft.startDate).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" }) : undefined,
+      startDate: draft.startDate ? new Date(draft.startDate).toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" }) : new Date().toLocaleDateString("es-ES"),
       avatar: draft.avatar || undefined,
       height: Number(draft.height) || 0,
       weight: Number(draft.weight) || 0,
