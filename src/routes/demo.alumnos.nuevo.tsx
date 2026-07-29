@@ -120,6 +120,7 @@ function NuevoAlumno() {
   };
 
   const submit = () => {
+    if (reachedLimit) return;
     const input: NewStudentInput = {
       name: draft.name.trim(),
       lastName: draft.lastName.trim() || undefined,
