@@ -26,7 +26,7 @@ export function PlanLimitBanner({
         </div>
       </div>
       <Link
-        to="/registro"
+        to="/demo/configuracion"
         className="inline-flex items-center gap-1.5 rounded-lg bg-foreground px-3 py-1.5 text-xs font-medium text-background hover:opacity-90"
       >
         Ver planes
