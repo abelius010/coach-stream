@@ -390,7 +390,7 @@ function RegistroPage() {
                             : "border-border"
                         }`}
                       >
-                        {active ? "Seleccionado" : "Elegir"}
+                        {active ? "Seleccionado" : p.cta}
                       </div>
                     </button>
                   );
