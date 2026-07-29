@@ -3,6 +3,8 @@ import { useState } from "react";
 import { ArrowLeft, ArrowRight, Check, X } from "lucide-react";
 import { useDemoStore, type NewStudentInput } from "../lib/demo-store";
 import { Field, inputCls, selectCls, textareaCls } from "../components/demo/Field";
+import { useMode, getAccountProfile, getPlanLimit } from "../lib/fitflow-mode";
+import { PlanLimitBanner } from "../components/demo/PlanLimitBanner";
 
 export const Route = createFileRoute("/demo/alumnos/nuevo")({
   component: NuevoAlumno,
@@ -59,7 +61,11 @@ const steps = ["Datos personales", "Datos físicos", "Objetivo y experiencia", "
 
 function NuevoAlumno() {
   const navigate = useNavigate();
+  const mode = useMode();
+  const students = useDemoStore((s) => s.students);
   const addStudent = useDemoStore((s) => s.addStudent);
+  const planLimit = mode === "account" ? getPlanLimit(getAccountProfile()?.plan) : null;
+  const reachedLimit = planLimit !== null && students.length >= planLimit;
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<Draft>(() => {
     if (typeof window === "undefined") return empty;
@@ -114,6 +120,7 @@ function NuevoAlumno() {
   };
 
   const submit = () => {
+    if (reachedLimit) return;
     const input: NewStudentInput = {
       name: draft.name.trim(),
       lastName: draft.lastName.trim() || undefined,
@@ -157,6 +164,12 @@ function NuevoAlumno() {
       <Link to="/demo/alumnos" className="mb-4 inline-flex items-center gap-1.5 text-xs text-ink-muted hover:text-foreground">
         <ArrowLeft className="h-3.5 w-3.5" /> Volver a alumnos
       </Link>
+
+      {reachedLimit && (
+        <div className="mb-5">
+          <PlanLimitBanner limit={planLimit!} />
+        </div>
+      )}
 
       <div className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight">Nuevo alumno</h1>
@@ -338,7 +351,11 @@ function NuevoAlumno() {
               Continuar <ArrowRight className="h-3.5 w-3.5" />
             </button>
           ) : (
-            <button onClick={submit} className="inline-flex items-center gap-1.5 rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background hover:opacity-90">
+            <button
+              onClick={submit}
+              disabled={reachedLimit}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+            >
               <Check className="h-3.5 w-3.5" /> Crear alumno
             </button>
           )}

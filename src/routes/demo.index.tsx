@@ -19,7 +19,8 @@ import {
 } from "lucide-react";
 import { activityFeed, smartTasks, stats, students as seededStudents } from "../lib/demo-data";
 import { useDemoStore } from "../lib/demo-store";
-import { useMode, getAccountProfile } from "../lib/fitflow-mode";
+import { useMode, getAccountProfile, getPlanLimit } from "../lib/fitflow-mode";
+import { PlanLimitBanner } from "../components/demo/PlanLimitBanner";
 
 export const Route = createFileRoute("/demo/")({
   component: DemoDashboard,
@@ -51,6 +52,8 @@ function DemoDashboard() {
     const plansCount = Object.values(nutritionPlans).filter((p) => p && p.meals.length > 0).length;
     const reviewsCount = Object.values(reviews).reduce((n, list) => n + list.length, 0);
     const hasStudents = students.length > 0;
+    const planLimit = getPlanLimit(profile?.plan);
+    const reachedLimit = planLimit !== null && students.length >= planLimit;
 
     const emptyKpis = [
       { label: "Alumnos activos", value: students.filter((s) => s.status === "activo").length, icon: Users },
@@ -70,13 +73,24 @@ function DemoDashboard() {
               Tu espacio está listo. Empieza creando tu primer alumno.
             </p>
           </div>
-          <Link
-            to="/demo/alumnos/nuevo"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-foreground px-3.5 py-2 text-sm font-medium text-background hover:opacity-90"
-          >
-            <Plus className="h-3.5 w-3.5" /> Crear primer alumno
-          </Link>
+          {reachedLimit ? (
+            <button
+              disabled
+              className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg bg-foreground px-3.5 py-2 text-sm font-medium text-background opacity-40"
+            >
+              <Plus className="h-3.5 w-3.5" /> Crear primer alumno
+            </button>
+          ) : (
+            <Link
+              to="/demo/alumnos/nuevo"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-foreground px-3.5 py-2 text-sm font-medium text-background hover:opacity-90"
+            >
+              <Plus className="h-3.5 w-3.5" /> Crear primer alumno
+            </Link>
+          )}
         </div>
+
+        {reachedLimit && <PlanLimitBanner limit={planLimit!} />}
 
         {/* Empty KPIs */}
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">

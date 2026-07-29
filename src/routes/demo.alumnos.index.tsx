@@ -2,6 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Filter, Plus, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useDemoStore, type StudentExt } from "../lib/demo-store";
+import { useMode, getAccountProfile, getPlanLimit } from "../lib/fitflow-mode";
+import { PlanLimitBanner } from "../components/demo/PlanLimitBanner";
 
 export const Route = createFileRoute("/demo/alumnos/")({
   component: AlumnosList,
@@ -30,6 +32,9 @@ const filterLabel: Record<FilterKey, string> = {
 
 function AlumnosList() {
   const students = useDemoStore((s) => s.students);
+  const mode = useMode();
+  const planLimit = mode === "account" ? getPlanLimit(getAccountProfile()?.plan) : null;
+  const reachedLimit = planLimit !== null && students.length >= planLimit;
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<FilterKey>("todos");
 
@@ -54,21 +59,34 @@ function AlumnosList() {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Alumnos</h1>
           <p className="mt-1 text-sm text-ink-muted">
-            {students.length} alumnos · {filtered.length} mostrados
+            {students.length}
+            {planLimit !== null ? ` / ${planLimit}` : ""} alumnos · {filtered.length} mostrados
           </p>
         </div>
         <div className="flex items-center gap-2">
           <button className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-sm hover:bg-surface">
             <Filter className="h-3.5 w-3.5" /> Filtros
           </button>
-          <Link
-            to="/demo/alumnos/nuevo"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-foreground px-3 py-2 text-sm font-medium text-background hover:opacity-90"
-          >
-            <Plus className="h-3.5 w-3.5" /> Nuevo alumno
-          </Link>
+          {reachedLimit ? (
+            <button
+              disabled
+              title="Has alcanzado el límite del plan gratuito"
+              className="inline-flex cursor-not-allowed items-center gap-1.5 rounded-lg bg-foreground px-3 py-2 text-sm font-medium text-background opacity-40"
+            >
+              <Plus className="h-3.5 w-3.5" /> Nuevo alumno
+            </button>
+          ) : (
+            <Link
+              to="/demo/alumnos/nuevo"
+              className="inline-flex items-center gap-1.5 rounded-lg bg-foreground px-3 py-2 text-sm font-medium text-background hover:opacity-90"
+            >
+              <Plus className="h-3.5 w-3.5" /> Nuevo alumno
+            </Link>
+          )}
         </div>
       </div>
+
+      {reachedLimit && <PlanLimitBanner limit={planLimit!} />}
 
       <div className="flex flex-wrap items-center gap-2">
         <div className="relative min-w-[240px] flex-1">
