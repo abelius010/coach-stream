@@ -61,7 +61,8 @@ function StudentDetail() {
     );
   }
 
-  const [tab, setTab] = useState<TabId>("resumen");
+
+
 
   return (
     <div className="mx-auto max-w-7xl p-4 md:p-8">
@@ -76,7 +77,9 @@ function StudentDetail() {
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-xl font-semibold md:text-2xl">{student.name}</h1>
-              <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">Activo</span>
+              <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
+                {student.status === "activo" ? "Activo" : student.status === "atencion" ? "Atención" : "En riesgo"}
+              </span>
             </div>
             <div className="mt-1 text-sm text-ink-muted">
               {student.goal} · {student.age} años · {student.height} cm · Desde {student.startDate}
@@ -88,6 +91,11 @@ function StudentDetail() {
               <Stat label="Cumplimiento" value={`${student.compliance}%`} />
               <Stat label="Plan" value={student.plan} />
             </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setEditing(true)} className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-sm hover:bg-surface">
+              <Pencil className="h-3.5 w-3.5" /> Editar alumno
+            </button>
           </div>
           <div className="flex items-center gap-2">
             <button className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-sm hover:bg-surface">
