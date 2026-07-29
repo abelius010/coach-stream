@@ -98,6 +98,15 @@ export type DayProgress = {
 };
 export type WorkoutProgress = Record<string, DayProgress>;
 
+export type MealLog = {
+  photo?: string | null;
+  photoAt?: string;
+  done?: boolean;
+  note?: string;
+};
+// Keyed by mealId (plan-level) so the same plan meal aggregates today's log.
+export type NutritionProgress = Record<string, MealLog>;
+
 export const parseSetsCount = (sets: string): number => {
   const n = parseInt(sets, 10);
   return Number.isFinite(n) && n > 0 ? Math.min(n, 12) : 1;
@@ -175,6 +184,7 @@ type State = {
   media: Record<string, MediaFile[]>;
   messages: Record<string, ChatMsg[]>;
   workoutProgress: Record<string, WorkoutProgress>;
+  nutritionProgress: Record<string, NutritionProgress>;
   setRole: (r: DemoRole) => void;
   addWorkoutTemplate: (t: Omit<WorkoutTemplate, "id" | "createdAt">) => void;
   addNutritionTemplate: (t: Omit<NutritionTemplate, "id" | "createdAt">) => void;
@@ -194,6 +204,9 @@ type State = {
   setExerciseNote: (studentId: string, dayId: string, exerciseId: string, note: string) => void;
   finishDay: (studentId: string, dayId: string) => void;
   resetDayProgress: (studentId: string, dayId: string) => void;
+  setMealPhoto: (studentId: string, mealId: string, photo: string | null) => void;
+  toggleMealDone: (studentId: string, mealId: string) => void;
+  setMealNote: (studentId: string, mealId: string, note: string) => void;
   resetDemo: () => void;
 };
 
@@ -254,6 +267,7 @@ const createFitFlowStore = (persistName: string, seed: Seed) =>
         media: {},
         messages: {},
         workoutProgress: {},
+        nutritionProgress: {},
         setRole: (r) => set({ role: r }),
         addWorkoutTemplate: (t) =>
           set({
@@ -329,6 +343,7 @@ const createFitFlowStore = (persistName: string, seed: Seed) =>
             media: omit(s.media),
             messages: omit(s.messages),
             workoutProgress: omit(s.workoutProgress),
+            nutritionProgress: omit(s.nutritionProgress),
           });
         },
         setRoutine: (studentId, weeks) =>
@@ -488,6 +503,47 @@ const createFitFlowStore = (persistName: string, seed: Seed) =>
             workoutProgress: { ...state.workoutProgress, [studentId]: prog },
           });
         },
+        setMealPhoto: (studentId, mealId, photo) => {
+          const state = get();
+          const s = state.nutritionProgress[studentId] ?? {};
+          const meal = s[mealId] ?? {};
+          set({
+            nutritionProgress: {
+              ...state.nutritionProgress,
+              [studentId]: {
+                ...s,
+                [mealId]: {
+                  ...meal,
+                  photo,
+                  photoAt: photo ? new Date().toISOString() : undefined,
+                  done: photo ? true : meal.done,
+                },
+              },
+            },
+          });
+        },
+        toggleMealDone: (studentId, mealId) => {
+          const state = get();
+          const s = state.nutritionProgress[studentId] ?? {};
+          const meal = s[mealId] ?? {};
+          set({
+            nutritionProgress: {
+              ...state.nutritionProgress,
+              [studentId]: { ...s, [mealId]: { ...meal, done: !meal.done } },
+            },
+          });
+        },
+        setMealNote: (studentId, mealId, note) => {
+          const state = get();
+          const s = state.nutritionProgress[studentId] ?? {};
+          const meal = s[mealId] ?? {};
+          set({
+            nutritionProgress: {
+              ...state.nutritionProgress,
+              [studentId]: { ...s, [mealId]: { ...meal, note } },
+            },
+          });
+        },
         resetDemo: () =>
           set({
             students: seed.students,
@@ -501,6 +557,7 @@ const createFitFlowStore = (persistName: string, seed: Seed) =>
             media: {},
             messages: {},
             workoutProgress: {},
+            nutritionProgress: {},
           }),
       }),
       {
