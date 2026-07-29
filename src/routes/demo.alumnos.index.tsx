@@ -147,22 +147,6 @@ function AlumnosList() {
           </ul>
         )}
       </div>
-
-      {toEdit && (
-        <EditStudentSheet student={toEdit} open={!!toEdit} onClose={() => setToEdit(null)} />
-      )}
-      <DeleteStudentDialog
-        open={!!toDelete}
-        studentName={toDelete?.name ?? ""}
-        onClose={() => setToDelete(null)}
-        onConfirm={() => {
-          if (!toDelete) return;
-          removeStudent(toDelete.id);
-          setToDelete(null);
-          pushToast("Alumno eliminado correctamente.");
-        }}
-      />
-      <ToastStack toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
 }
