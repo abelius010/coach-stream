@@ -61,7 +61,7 @@ const empty: Draft = {
   workMode: "",
   studentsRange: "",
   currentTools: [],
-  plan: "pro",
+  plan: "gratuito",
 };
 
 const professionalOptions = [
@@ -77,12 +77,18 @@ const toolOptions = ["WhatsApp", "Excel", "Google Drive", "PDF", "Notion", "Otra
 
 const plans = [
   {
-    id: "starter",
-    name: "Starter",
-    price: "9 €",
+    id: "gratuito",
+    name: "Gratuito",
+    price: "0 €",
     period: "/mes",
-    tagline: "Para empezar",
-    features: ["Hasta 10 alumnos", "Rutinas y nutrición", "Chat básico"],
+    tagline: "Empieza sin coste",
+    cta: "Comenzar gratis",
+    features: [
+      "Hasta 5 alumnos",
+      "Rutinas y nutrición",
+      "Progreso y hábitos",
+      "Chat y multimedia",
+    ],
   },
   {
     id: "pro",
@@ -90,7 +96,14 @@ const plans = [
     price: "29 €",
     period: "/mes",
     tagline: "Lo más elegido",
-    features: ["Hasta 75 alumnos", "Bandeja inteligente", "Progreso y hábitos", "Multimedia ilimitada"],
+    cta: "Elegir Pro",
+    features: [
+      "Hasta 75 alumnos",
+      "Bandeja inteligente",
+      "Progreso y hábitos",
+      "Multimedia ilimitada",
+      "Todo lo del plan Gratuito",
+    ],
     highlight: true,
   },
   {
@@ -99,7 +112,13 @@ const plans = [
     price: "59 €",
     period: "/mes",
     tagline: "Para equipos",
-    features: ["Alumnos ilimitados", "Multi-entrenador", "Marca propia", "Soporte prioritario"],
+    cta: "Elegir Business",
+    features: [
+      "Alumnos ilimitados",
+      "Multi-entrenador",
+      "Marca personalizada",
+      "Soporte prioritario",
+    ],
   },
 ];
 
