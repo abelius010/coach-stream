@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Eye, Filter, Pencil, Plus, Search, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDemoStore, type StudentExt } from "../lib/demo-store";
 import { ActionMenu, type ActionItem } from "../components/demo/ActionMenu";
 import { DeleteStudentDialog } from "../components/demo/DeleteStudentDialog";
