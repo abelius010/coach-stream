@@ -233,6 +233,8 @@ type State = {
   nutritionExtras: Record<string, ExtraMeal[]>;
   nutritionDayIndex: Record<string, number>;
   habitsLog: Record<string, HabitLog>;
+  nutritionHistory: Record<string, Record<string, NutritionDaySnapshot>>;
+  coachMealComments: Record<string, Record<string, Record<string, string>>>;
   setRole: (r: DemoRole) => void;
   addWorkoutTemplate: (t: Omit<WorkoutTemplate, "id" | "createdAt">) => void;
   addNutritionTemplate: (t: Omit<NutritionTemplate, "id" | "createdAt">) => void;
