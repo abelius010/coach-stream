@@ -86,4 +86,16 @@ export const initials = (p: AccountProfile | null): string => {
     .slice(0, 2)
     .map((s) => s[0]?.toUpperCase() ?? "")
     .join("") || "E";
+
+export const getPlanLimit = (plan?: string): number | null => {
+  if (plan === "pro") return 75;
+  if (plan === "business") return null;
+  return 5; // gratuito (default)
+};
+
+export const planLabel = (plan?: string): string => {
+  if (plan === "pro") return "Pro";
+  if (plan === "business") return "Business";
+  return "Gratuito";
+};
 };
