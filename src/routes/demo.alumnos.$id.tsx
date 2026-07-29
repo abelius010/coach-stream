@@ -333,57 +333,6 @@ function EntrenosTab() {
   );
 }
 
-function NutricionTab() {
-  const { targets, meals, coachNote } = nutritionPlan;
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        {[
-          { l: "Calorías", v: `${targets.kcal} kcal` },
-          { l: "Proteína", v: `${targets.protein} g` },
-          { l: "Carbohidratos", v: `${targets.carbs} g` },
-          { l: "Grasas", v: `${targets.fat} g` },
-        ].map((m) => (
-          <div key={m.l} className="rounded-xl border border-border bg-background p-4">
-            <div className="text-xs text-ink-muted">{m.l}</div>
-            <div className="mt-1 text-lg font-semibold">{m.v}</div>
-          </div>
-        ))}
-      </div>
-
-      <div className="space-y-3">
-        {meals.map((m) => (
-          <div key={m.name} className="overflow-hidden rounded-2xl border border-border bg-background md:flex">
-            {m.photo && (
-              <img src={m.photo} alt="" className="h-40 w-full object-cover md:h-auto md:w-48" />
-            )}
-            <div className="flex-1 p-5">
-              <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <div>
-                  <div className="text-sm font-semibold">{m.name}</div>
-                  <div className="text-xs text-ink-muted">{m.time}</div>
-                </div>
-                <div className="text-xs text-ink-muted">
-                  <span className="font-medium text-foreground">{m.kcal} kcal</span> · P {m.protein}g · C {m.carbs}g · G {m.fat}g
-                </div>
-              </div>
-              <ul className="mt-3 space-y-1 text-sm text-ink-muted">
-                {m.items.map((i) => (
-                  <li key={i}>· {i}</li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="rounded-2xl border border-border bg-brand-muted/40 p-4 text-sm">
-        <div className="text-xs font-medium uppercase tracking-wide text-brand">Nota del entrenador</div>
-        <p className="mt-1 text-foreground">{coachNote}</p>
-      </div>
-    </div>
-  );
-}
 
 function WeightChart() {
   const min = Math.min(...weightSeries.map((p) => p.kg));
