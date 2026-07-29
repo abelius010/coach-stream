@@ -203,6 +203,9 @@ type State = {
   messages: Record<string, ChatMsg[]>;
   workoutProgress: Record<string, WorkoutProgress>;
   nutritionProgress: Record<string, NutritionProgress>;
+  nutritionExtras: Record<string, ExtraMeal[]>;
+  nutritionDayIndex: Record<string, number>;
+  habitsLog: Record<string, HabitLog>;
   setRole: (r: DemoRole) => void;
   addWorkoutTemplate: (t: Omit<WorkoutTemplate, "id" | "createdAt">) => void;
   addNutritionTemplate: (t: Omit<NutritionTemplate, "id" | "createdAt">) => void;
@@ -225,6 +228,11 @@ type State = {
   setMealPhoto: (studentId: string, mealId: string, photo: string | null) => void;
   toggleMealDone: (studentId: string, mealId: string) => void;
   setMealNote: (studentId: string, mealId: string, note: string) => void;
+  addExtraMeal: (studentId: string, meal: Omit<ExtraMeal, "id" | "createdAt">) => void;
+  updateExtraMeal: (studentId: string, mealId: string, patch: Partial<ExtraMeal>) => void;
+  removeExtraMeal: (studentId: string, mealId: string) => void;
+  finishNutritionDay: (studentId: string) => void;
+  updateHabit: (studentId: string, patch: Partial<HabitLog>) => void;
   resetDemo: () => void;
 };
 
