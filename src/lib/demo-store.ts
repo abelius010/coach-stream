@@ -82,6 +82,25 @@ export const seedRoutine = (): RoutineWeek[] =>
     })),
   }));
 
+const parseItem = (s: string): { name: string; qty: string; unit: string } => {
+  const m = /^(.+?)\s+(\d+(?:[.,]\d+)?)\s*([a-zA-ZáéíóúñÁÉÍÓÚÑ]+)?\s*$/.exec(s);
+  if (m) return { name: m[1].trim(), qty: m[2].replace(",", "."), unit: (m[3] ?? "").trim() };
+  return { name: s, qty: "", unit: "" };
+};
+
+export const seedNutritionPlan = (): NutritionPlanData => ({
+  targets: { ...seedNutrition.targets },
+  coachNote: seedNutrition.coachNote,
+  meals: seedNutrition.meals.map((m) => ({
+    id: genId("meal"),
+    name: m.name,
+    time: m.time,
+    photo: m.photo,
+    notes: "",
+    items: m.items.map((it) => ({ id: genId("it"), ...parseItem(it) })),
+  })),
+});
+
 type State = {
   students: StudentExt[];
   role: DemoRole;
