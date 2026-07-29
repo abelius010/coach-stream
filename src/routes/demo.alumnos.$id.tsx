@@ -252,13 +252,12 @@ function StudentDetail() {
         studentName={student.name}
         onClose={() => setConfirmDelete(false)}
         onConfirm={() => {
-          const name = student.name;
           setConfirmDelete(false);
+          try {
+            sessionStorage.setItem("fitflow-student-deleted", "1");
+          } catch {}
           removeStudent(student.id);
-          navigate({
-            to: "/demo/alumnos",
-            search: { deleted: name } as never,
-          }).catch(() => navigate({ to: "/demo/alumnos" }));
+          navigate({ to: "/demo/alumnos" });
         }}
       />
       <ToastStack toasts={toasts} onDismiss={dismissToast} />
