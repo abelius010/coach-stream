@@ -53,11 +53,29 @@ export type NutritionMeal = {
   notes: string;
   items: NutritionItem[];
 };
+export type NutritionDay = { id: string; day: string; meals: NutritionMeal[] };
+export type NutritionWeek = { id: string; name: string; days: NutritionDay[] };
 export type NutritionPlanData = {
+  name?: string;
+  objective?: string;
+  startDate?: string;
+  notes?: string;
+  status?: "draft" | "active";
   targets: { kcal: number; protein: number; carbs: number; fat: number };
   meals: NutritionMeal[];
+  weeks?: NutritionWeek[];
   coachNote: string;
 };
+
+export const WEEKDAYS = [
+  "Lunes",
+  "Martes",
+  "Miércoles",
+  "Jueves",
+  "Viernes",
+  "Sábado",
+  "Domingo",
+] as const;
 
 export type WeightLog = { id: string; date: string; kg: number };
 export type ReviewMeasurements = {
