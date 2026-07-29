@@ -46,6 +46,15 @@ function AlumnosList() {
     setToasts((prev) => [...prev, { id: Date.now() + Math.random(), text }]);
   const dismissToast = (tid: number) => setToasts((prev) => prev.filter((t) => t.id !== tid));
 
+  useEffect(() => {
+    try {
+      if (sessionStorage.getItem("fitflow-student-deleted")) {
+        sessionStorage.removeItem("fitflow-student-deleted");
+        pushToast("Alumno eliminado correctamente.");
+      }
+    } catch {}
+  }, []);
+
   const filtered = useMemo(() => {
     const now = Date.now();
     return students.filter((s) => {
