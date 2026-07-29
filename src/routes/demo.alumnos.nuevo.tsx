@@ -351,7 +351,11 @@ function NuevoAlumno() {
               Continuar <ArrowRight className="h-3.5 w-3.5" />
             </button>
           ) : (
-            <button onClick={submit} className="inline-flex items-center gap-1.5 rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background hover:opacity-90">
+            <button
+              onClick={submit}
+              disabled={reachedLimit}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+            >
               <Check className="h-3.5 w-3.5" /> Crear alumno
             </button>
           )}
