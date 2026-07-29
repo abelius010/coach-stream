@@ -1,11 +1,29 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useRef, useState } from "react";
-import { Salad, Camera, Check, X, Sparkles, StickyNote, ChevronDown, ChevronUp } from "lucide-react";
+import { useMemo, useRef, useState } from "react";
+import {
+  Salad,
+  Camera,
+  Check,
+  X,
+  Sparkles,
+  StickyNote,
+  ChevronDown,
+  ChevronUp,
+  Plus,
+  Trash2,
+  Droplets,
+  Moon,
+  Footprints,
+  Scale,
+  CheckCircle2,
+} from "lucide-react";
 import {
   useDemoStore,
   type NutritionMeal,
   type NutritionPlanData,
   type MealLog,
+  type ExtraMeal,
+  type HabitLog,
 } from "@/lib/demo-store";
 import { useActiveAlumnoId } from "@/lib/fitflow-mode";
 import { getAccountProfile, displayName } from "@/lib/fitflow-mode";
@@ -20,6 +38,9 @@ export const Route = createFileRoute("/alumno/nutricion")({
   component: AlumnoNutricion,
 });
 
+const EMPTY_EXTRAS: ExtraMeal[] = [];
+const EMPTY_HABITS: HabitLog = {};
+
 function mealIcon(name: string): string {
   const n = name.toLowerCase();
   if (n.includes("desayuno")) return "🍳";
@@ -30,6 +51,11 @@ function mealIcon(name: string): string {
   if (n.includes("libre")) return "🍽️";
   if (n.includes("post") || n.includes("pre")) return "🥤";
   return "🍽️";
+}
+
+function nowHHMM() {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
 function AlumnoNutricion() {
@@ -45,7 +71,19 @@ function AlumnoNutricion() {
   const progress = useDemoStore((s) =>
     studentId ? s.nutritionProgress[studentId] : undefined,
   );
+  const extras = useDemoStore((s) =>
+    studentId ? s.nutritionExtras[studentId] : undefined,
+  ) ?? EMPTY_EXTRAS;
+  const habits = useDemoStore((s) =>
+    studentId ? s.habitsLog[studentId] : undefined,
+  ) ?? EMPTY_HABITS;
+  const dayIndex = useDemoStore((s) =>
+    studentId ? s.nutritionDayIndex[studentId] : undefined,
+  ) ?? 1;
+  const finishNutritionDay = useDemoStore((s) => s.finishNutritionDay);
+
   const coachName = displayName(getAccountProfile());
+  const [dayClosed, setDayClosed] = useState(false);
 
   if (!studentId || !student) {
     return (
@@ -71,11 +109,21 @@ function AlumnoNutricion() {
   );
   const pct = Math.round((doneCount / plan.meals.length) * 100);
 
+  const onFinishDay = () => {
+    setDayClosed(true);
+    setTimeout(() => {
+      finishNutritionDay(studentId);
+      setDayClosed(false);
+    }, 1400);
+  };
+
   return (
-    <div className="flex flex-col gap-5 p-5">
+    <div className="flex flex-col gap-5 p-5 pb-24">
       <header className="pt-2">
-        <div className="text-xs font-medium uppercase tracking-wider text-ink-muted">
-          Nutrición de hoy
+        <div className="flex items-center justify-between">
+          <div className="text-xs font-medium uppercase tracking-wider text-ink-muted">
+            Nutrición · Día {dayIndex}
+          </div>
         </div>
         <h1 className="mt-0.5 text-2xl font-semibold tracking-tight">Tu plan</h1>
         <p className="mt-1 text-xs text-ink-muted">
@@ -120,6 +168,43 @@ function AlumnoNutricion() {
             log={progress?.[meal.id]}
           />
         ))}
+      </section>
+
+      {/* Extras */}
+      {extras.length > 0 && (
+        <section className="space-y-2">
+          <div className="flex items-center justify-between px-1">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted">
+              Añadidas por ti
+            </div>
+            <span className="text-[11px] text-ink-muted">{extras.length}</span>
+          </div>
+          <div className="space-y-3">
+            {extras.map((m) => (
+              <ExtraMealCard key={m.id} studentId={studentId} meal={m} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      <AddExtraMealButton studentId={studentId} />
+
+      {/* Habits */}
+      <HabitsBlock studentId={studentId} habits={habits} />
+
+      {/* Finish day */}
+      <section className="mt-2">
+        <button
+          onClick={onFinishDay}
+          disabled={dayClosed}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-foreground py-4 text-sm font-semibold text-background shadow-soft active:scale-[0.99] disabled:opacity-70"
+        >
+          <CheckCircle2 className="h-4 w-4" />
+          {dayClosed ? "Guardando día…" : "Finalizar día"}
+        </button>
+        <p className="mt-2 text-center text-[11px] text-ink-muted">
+          Se guardarán tus comidas, fotos y hábitos. Se abrirá el día siguiente.
+        </p>
       </section>
 
       {plan.coachNote && (
@@ -314,6 +399,440 @@ function MealCard({
         )}
       </div>
     </article>
+  );
+}
+
+function ExtraMealCard({ studentId, meal }: { studentId: string; meal: ExtraMeal }) {
+  const updateExtraMeal = useDemoStore((s) => s.updateExtraMeal);
+  const removeExtraMeal = useDemoStore((s) => s.removeExtraMeal);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
+  const [noteOpen, setNoteOpen] = useState(!!meal.note);
+
+  const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => updateExtraMeal(studentId, meal.id, { photo: String(reader.result) });
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
+  return (
+    <article className="overflow-hidden rounded-2xl border border-dashed border-brand/40 bg-brand-muted/20">
+      <div className="flex items-start gap-3 p-4">
+        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-background text-lg">
+          🍽️
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-baseline justify-between gap-2">
+            <h3 className="truncate text-sm font-semibold">{meal.name}</h3>
+            <span className="shrink-0 text-[11px] text-ink-muted">{meal.time}</span>
+          </div>
+          <p className="mt-0.5 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-brand">
+            <Plus className="h-2.5 w-2.5" /> Añadida por ti
+          </p>
+        </div>
+        <button
+          onClick={() => removeExtraMeal(studentId, meal.id)}
+          className="grid h-8 w-8 place-items-center rounded-full text-ink-muted hover:bg-background"
+          aria-label="Eliminar"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
+      <div className="border-t border-brand/20 bg-background px-4 py-3">
+        {meal.photo ? (
+          <div className="relative overflow-hidden rounded-xl">
+            <img src={meal.photo} alt={meal.name} className="h-40 w-full object-cover" />
+            <button
+              onClick={() => updateExtraMeal(studentId, meal.id, { photo: null })}
+              className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-background/90 text-ink-muted shadow-soft backdrop-blur"
+              aria-label="Quitar foto"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => cameraRef.current?.click()}
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-foreground py-3 text-xs font-semibold text-background active:scale-[0.98]"
+            >
+              <Camera className="h-4 w-4" /> Cámara
+            </button>
+            <button
+              onClick={() => galleryRef.current?.click()}
+              className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-background py-3 text-xs font-semibold text-foreground active:scale-[0.98]"
+            >
+              📷 Galería
+            </button>
+          </div>
+        )}
+
+        <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={onFile} className="hidden" />
+        <input ref={galleryRef} type="file" accept="image/*" onChange={onFile} className="hidden" />
+
+        <div className="mt-3 flex items-center justify-end">
+          <button
+            onClick={() => setNoteOpen((v) => !v)}
+            className="inline-flex items-center gap-1 text-[11px] font-medium text-ink-muted"
+          >
+            <StickyNote className="h-3.5 w-3.5" /> Nota
+            {noteOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+          </button>
+        </div>
+        {noteOpen && (
+          <textarea
+            value={meal.note ?? ""}
+            onChange={(e) => updateExtraMeal(studentId, meal.id, { note: e.target.value })}
+            placeholder="Añade un detalle…"
+            rows={2}
+            className="mt-2 w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-xs outline-none focus:border-foreground/30"
+          />
+        )}
+      </div>
+    </article>
+  );
+}
+
+function AddExtraMealButton({ studentId }: { studentId: string }) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [time, setTime] = useState(nowHHMM());
+  const [note, setNote] = useState("");
+  const [photo, setPhoto] = useState<string | null>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const galleryRef = useRef<HTMLInputElement>(null);
+  const addExtraMeal = useDemoStore((s) => s.addExtraMeal);
+
+  const reset = () => {
+    setName("");
+    setTime(nowHHMM());
+    setNote("");
+    setPhoto(null);
+  };
+
+  const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setPhoto(String(reader.result));
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
+  const onSave = () => {
+    if (!name.trim()) return;
+    addExtraMeal(studentId, { name: name.trim(), time, note: note.trim() || undefined, photo });
+    reset();
+    setOpen(false);
+  };
+
+  if (!open) {
+    return (
+      <button
+        onClick={() => {
+          setTime(nowHHMM());
+          setOpen(true);
+        }}
+        className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-background py-4 text-sm font-semibold text-foreground hover:border-foreground/30 active:scale-[0.99]"
+      >
+        <Plus className="h-4 w-4" /> Añadir comida
+      </button>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border border-border bg-background p-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-sm font-semibold">Añadir comida libre</h3>
+        <button
+          onClick={() => {
+            reset();
+            setOpen(false);
+          }}
+          className="grid h-8 w-8 place-items-center rounded-full text-ink-muted hover:bg-surface"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="mt-3 space-y-3">
+        <label className="block">
+          <span className="text-[11px] font-medium uppercase tracking-wider text-ink-muted">
+            Nombre
+          </span>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Ej: Bravas para compartir"
+            className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-foreground/30"
+          />
+        </label>
+
+        <label className="block">
+          <span className="text-[11px] font-medium uppercase tracking-wider text-ink-muted">
+            Hora
+          </span>
+          <input
+            type="time"
+            value={time}
+            onChange={(e) => setTime(e.target.value)}
+            className="mt-1 h-10 w-full rounded-lg border border-border bg-background px-3 text-sm outline-none focus:border-foreground/30"
+          />
+        </label>
+
+        <div>
+          <span className="text-[11px] font-medium uppercase tracking-wider text-ink-muted">
+            Fotografía
+          </span>
+          {photo ? (
+            <div className="relative mt-1 overflow-hidden rounded-xl">
+              <img src={photo} alt="Comida" className="h-40 w-full object-cover" />
+              <button
+                onClick={() => setPhoto(null)}
+                className="absolute right-2 top-2 grid h-8 w-8 place-items-center rounded-full bg-background/90 text-ink-muted shadow-soft"
+                aria-label="Quitar"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="mt-1 grid grid-cols-2 gap-2">
+              <button
+                onClick={() => cameraRef.current?.click()}
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-foreground py-3 text-xs font-semibold text-background active:scale-[0.98]"
+              >
+                <Camera className="h-4 w-4" /> Cámara
+              </button>
+              <button
+                onClick={() => galleryRef.current?.click()}
+                className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-background py-3 text-xs font-semibold text-foreground active:scale-[0.98]"
+              >
+                📷 Galería
+              </button>
+            </div>
+          )}
+          <input ref={cameraRef} type="file" accept="image/*" capture="environment" onChange={onFile} className="hidden" />
+          <input ref={galleryRef} type="file" accept="image/*" onChange={onFile} className="hidden" />
+        </div>
+
+        <label className="block">
+          <span className="text-[11px] font-medium uppercase tracking-wider text-ink-muted">
+            Nota (opcional)
+          </span>
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            rows={2}
+            placeholder="Ej: Con amigos en la playa"
+            className="mt-1 w-full resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-foreground/30"
+          />
+        </label>
+
+        <button
+          onClick={onSave}
+          disabled={!name.trim()}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-foreground py-3 text-sm font-semibold text-background disabled:opacity-40 active:scale-[0.98]"
+        >
+          Guardar comida
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function HabitsBlock({ studentId, habits }: { studentId: string; habits: HabitLog }) {
+  const updateHabit = useDemoStore((s) => s.updateHabit);
+  const waterMl = habits.waterMl ?? 0;
+  const waterGoal = 3000;
+  const waterPct = Math.min(100, Math.round((waterMl / waterGoal) * 100));
+
+  const [sleepOpen, setSleepOpen] = useState(false);
+  const [stepsOpen, setStepsOpen] = useState(false);
+  const [weightOpen, setWeightOpen] = useState(false);
+
+  const sleepLabel = useMemo(() => {
+    const h = habits.sleepHours ?? 0;
+    const m = habits.sleepMinutes ?? 0;
+    if (!h && !m) return "—";
+    return `${h} h ${String(m).padStart(2, "0")} min`;
+  }, [habits.sleepHours, habits.sleepMinutes]);
+
+  return (
+    <section className="space-y-2">
+      <div className="flex items-center justify-between px-1">
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-ink-muted">
+          Hábitos diarios
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        {/* Water */}
+        <div className="rounded-2xl border border-border bg-background p-3">
+          <div className="flex items-center gap-1.5 text-[11px] font-semibold text-brand">
+            <Droplets className="h-3.5 w-3.5" /> Agua
+          </div>
+          <div className="mt-1 text-sm font-semibold">
+            {(waterMl / 1000).toFixed(2).replace(".", ",")}
+            <span className="text-[10px] font-medium text-ink-muted"> / 3 L</span>
+          </div>
+          <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-surface">
+            <div className="h-full rounded-full bg-brand transition-all" style={{ width: `${waterPct}%` }} />
+          </div>
+          <div className="mt-2 grid grid-cols-2 gap-1.5">
+            <button
+              onClick={() => updateHabit(studentId, { waterMl: Math.max(0, waterMl - 250) })}
+              className="rounded-lg border border-border bg-background py-1.5 text-[11px] font-semibold text-foreground active:scale-95"
+            >
+              −250
+            </button>
+            <button
+              onClick={() => updateHabit(studentId, { waterMl: waterMl + 250 })}
+              className="rounded-lg bg-foreground py-1.5 text-[11px] font-semibold text-background active:scale-95"
+            >
+              +250
+            </button>
+          </div>
+        </div>
+
+        {/* Sleep */}
+        <HabitCard
+          icon={<Moon className="h-3.5 w-3.5" />}
+          color="text-indigo-500"
+          label="Sueño"
+          value={sleepLabel}
+          actionLabel="Registrar sueño"
+          open={sleepOpen}
+          onToggle={() => setSleepOpen((v) => !v)}
+        >
+          <div className="grid grid-cols-2 gap-2">
+            <NumberField
+              label="Horas"
+              value={habits.sleepHours ?? ""}
+              onChange={(v) => updateHabit(studentId, { sleepHours: v })}
+              max={14}
+            />
+            <NumberField
+              label="Min"
+              value={habits.sleepMinutes ?? ""}
+              onChange={(v) => updateHabit(studentId, { sleepMinutes: v })}
+              max={59}
+            />
+          </div>
+        </HabitCard>
+
+        {/* Steps */}
+        <HabitCard
+          icon={<Footprints className="h-3.5 w-3.5" />}
+          color="text-emerald-500"
+          label="Pasos"
+          value={habits.steps != null ? habits.steps.toLocaleString("es-ES") : "—"}
+          actionLabel="Registrar pasos"
+          open={stepsOpen}
+          onToggle={() => setStepsOpen((v) => !v)}
+        >
+          <NumberField
+            label="Pasos"
+            value={habits.steps ?? ""}
+            onChange={(v) => updateHabit(studentId, { steps: v })}
+            max={99999}
+          />
+        </HabitCard>
+
+        {/* Weight */}
+        <HabitCard
+          icon={<Scale className="h-3.5 w-3.5" />}
+          color="text-rose-500"
+          label="Peso"
+          value={habits.weight != null ? `${habits.weight.toString().replace(".", ",")} kg` : "—"}
+          actionLabel="Registrar peso"
+          open={weightOpen}
+          onToggle={() => setWeightOpen((v) => !v)}
+        >
+          <NumberField
+            label="kg"
+            value={habits.weight ?? ""}
+            onChange={(v) => updateHabit(studentId, { weight: v })}
+            max={300}
+            step={0.1}
+          />
+        </HabitCard>
+      </div>
+    </section>
+  );
+}
+
+function HabitCard({
+  icon,
+  color,
+  label,
+  value,
+  actionLabel,
+  open,
+  onToggle,
+  children,
+}: {
+  icon: React.ReactNode;
+  color: string;
+  label: string;
+  value: string;
+  actionLabel: string;
+  open: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="rounded-2xl border border-border bg-background p-3">
+      <div className={`flex items-center gap-1.5 text-[11px] font-semibold ${color}`}>
+        {icon} {label}
+      </div>
+      <div className="mt-1 text-sm font-semibold">{value}</div>
+      <button
+        onClick={onToggle}
+        className="mt-2 w-full rounded-lg border border-border bg-background py-1.5 text-[11px] font-semibold text-foreground active:scale-95"
+      >
+        {open ? "Cerrar" : actionLabel}
+      </button>
+      {open && <div className="mt-2">{children}</div>}
+    </div>
+  );
+}
+
+function NumberField({
+  label,
+  value,
+  onChange,
+  max,
+  step = 1,
+}: {
+  label: string;
+  value: number | "";
+  onChange: (v: number | undefined) => void;
+  max: number;
+  step?: number;
+}) {
+  return (
+    <label className="block">
+      <span className="text-[10px] uppercase tracking-wider text-ink-muted">{label}</span>
+      <input
+        type="number"
+        inputMode="decimal"
+        min={0}
+        max={max}
+        step={step}
+        value={value}
+        onChange={(e) => {
+          const v = e.target.value;
+          if (v === "") return onChange(undefined);
+          const n = Number(v);
+          if (!Number.isNaN(n)) onChange(n);
+        }}
+        className="mt-0.5 h-9 w-full rounded-lg border border-border bg-background px-2 text-sm outline-none focus:border-foreground/30"
+      />
+    </label>
   );
 }
 
