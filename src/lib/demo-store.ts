@@ -262,6 +262,7 @@ type State = {
   removeExtraMeal: (studentId: string, mealId: string) => void;
   finishNutritionDay: (studentId: string) => void;
   updateHabit: (studentId: string, patch: Partial<HabitLog>) => void;
+  setCoachMealComment: (studentId: string, dateKey: string, mealId: string, comment: string) => void;
   resetDemo: () => void;
 };
 
