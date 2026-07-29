@@ -62,6 +62,7 @@ function DemoLayout() {
       icon: MessageSquare,
       badge: isDemo ? 4 : pendingMessages || undefined,
     },
+    { to: "/demo/configuracion", label: "Configuración", icon: Settings },
   ];
 
   const coachName = isDemo ? "Carlos Ruiz" : displayName(profile);
