@@ -85,6 +85,24 @@ export type MediaFile = {
 };
 export type ChatMsg = { id: string; from: "coach" | "student"; text: string; time: string };
 
+export type SetProgress = { done: boolean; weight?: string };
+export type ExerciseProgress = {
+  sets: SetProgress[];
+  weightUsed?: string;
+  note?: string;
+  done?: boolean;
+};
+export type DayProgress = {
+  exercises: Record<string, ExerciseProgress>;
+  finishedAt?: string;
+};
+export type WorkoutProgress = Record<string, DayProgress>;
+
+export const parseSetsCount = (sets: string): number => {
+  const n = parseInt(sets, 10);
+  return Number.isFinite(n) && n > 0 ? Math.min(n, 12) : 1;
+};
+
 export const genId = (prefix: string) =>
   `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 
