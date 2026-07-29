@@ -30,6 +30,7 @@ import { EditStudentSheet } from "../components/demo/EditStudentSheet";
 import { TabActions, EmptyDeletedState } from "../components/demo/TabActions";
 import { ToastStack, type ToastData } from "../components/demo/Toast";
 import { WorkoutRoutine } from "../components/demo/WorkoutRoutine";
+import { NutritionPlan } from "../components/demo/NutritionPlan";
 
 export const Route = createFileRoute("/demo/alumnos/$id")({
   loader: ({ params }) => ({ id: params.id }),
