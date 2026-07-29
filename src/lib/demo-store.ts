@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { students as seedStudents, type Student } from "./demo-data";
+import { students as seedStudents, workoutWeeks as seedWorkoutWeeks, type Student } from "./demo-data";
 
 export type StudentExt = Student & {
   lastName?: string;
@@ -32,17 +32,54 @@ export type DemoRole = "coach" | "student";
 export type WorkoutTemplate = { id: string; name: string; createdAt: string; summary: string };
 export type NutritionTemplate = { id: string; name: string; createdAt: string; summary: string };
 
+export type RoutineExercise = {
+  id: string;
+  name: string;
+  sets: string;
+  reps: string;
+  weight: string;
+  note: string;
+};
+export type RoutineDay = { id: string; day: string; done?: boolean; exercises: RoutineExercise[] };
+export type RoutineWeek = { id: string; week: string; days: RoutineDay[] };
+
+export const genId = (prefix: string) =>
+  `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
+
+const parseSets = (s: string): { sets: string; reps: string } => {
+  const m = /^\s*(\d+)\s*[x×]\s*(.+?)\s*$/i.exec(s);
+  if (m) return { sets: m[1], reps: m[2] };
+  return { sets: s, reps: "" };
+};
+
+export const seedRoutine = (): RoutineWeek[] =>
+  seedWorkoutWeeks.map((w) => ({
+    id: genId("wk"),
+    week: w.week,
+    days: w.days.map((d) => ({
+      id: genId("day"),
+      day: d.day,
+      done: d.done,
+      exercises: d.exercises.map((e) => {
+        const { sets, reps } = parseSets(e.sets);
+        return { id: genId("ex"), name: e.name, sets, reps, weight: e.weight, note: e.note };
+      }),
+    })),
+  }));
+
 type State = {
   students: StudentExt[];
   role: DemoRole;
   workoutTemplates: WorkoutTemplate[];
   nutritionTemplates: NutritionTemplate[];
+  routines: Record<string, RoutineWeek[]>;
   setRole: (r: DemoRole) => void;
   addWorkoutTemplate: (t: Omit<WorkoutTemplate, "id" | "createdAt">) => void;
   addNutritionTemplate: (t: Omit<NutritionTemplate, "id" | "createdAt">) => void;
   addStudent: (input: NewStudentInput) => string;
   updateStudent: (id: string, patch: Partial<StudentExt>) => void;
   removeStudent: (id: string) => void;
+  setRoutine: (studentId: string, weeks: RoutineWeek[]) => void;
   resetDemo: () => void;
 };
 
