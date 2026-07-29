@@ -27,6 +27,8 @@ import {
 } from "../lib/demo-data";
 import { useDemoStore } from "../lib/demo-store";
 import { EditStudentSheet } from "../components/demo/EditStudentSheet";
+import { TabActions, EmptyDeletedState } from "../components/demo/TabActions";
+import { ToastStack, type ToastData } from "../components/demo/Toast";
 
 export const Route = createFileRoute("/demo/alumnos/$id")({
   loader: ({ params }) => ({ id: params.id }),
@@ -50,6 +52,13 @@ function StudentDetail() {
   const student = useDemoStore((s) => s.students.find((x) => x.id === id));
   const [tab, setTab] = useState<TabId>("resumen");
   const [editing, setEditing] = useState(false);
+  const [toasts, setToasts] = useState<ToastData[]>([]);
+  const [workoutDeleted, setWorkoutDeleted] = useState(false);
+  const [nutritionDeleted, setNutritionDeleted] = useState(false);
+  const pushToast = (text: string) =>
+    setToasts((prev) => [...prev, { id: Date.now() + Math.random(), text }]);
+  const dismissToast = (tid: number) =>
+    setToasts((prev) => prev.filter((t) => t.id !== tid));
 
   if (!student) {
     return (
@@ -130,14 +139,73 @@ function StudentDetail() {
 
       <div className="mt-5">
         {tab === "resumen" && <ResumenTab student={student} />}
-        {tab === "entrenos" && <EntrenosTab />}
-        {tab === "nutricion" && <NutricionTab />}
+        {tab === "entrenos" && (
+          <TabShell
+            title="Entrenamientos"
+            actions={
+              <TabActions
+                kind="workout"
+                studentName={student.name}
+                onToast={pushToast}
+                deleted={workoutDeleted}
+                onDeletedChange={setWorkoutDeleted}
+              />
+            }
+          >
+            {workoutDeleted ? (
+              <EmptyDeletedState kind="workout" />
+            ) : (
+              <EntrenosTab />
+            )}
+          </TabShell>
+        )}
+        {tab === "nutricion" && (
+          <TabShell
+            title="Nutrición"
+            actions={
+              <TabActions
+                kind="nutrition"
+                studentName={student.name}
+                onToast={pushToast}
+                deleted={nutritionDeleted}
+                onDeletedChange={setNutritionDeleted}
+              />
+            }
+          >
+            {nutritionDeleted ? (
+              <EmptyDeletedState kind="nutrition" />
+            ) : (
+              <NutricionTab />
+            )}
+          </TabShell>
+        )}
         {tab === "progreso" && <ProgresoTab />}
         {tab === "habitos" && <HabitosTab />}
         {tab === "multimedia" && <MultimediaTab />}
         {tab === "chat" && <ChatTab />}
       </div>
       <EditStudentSheet student={student} open={editing} onClose={() => setEditing(false)} />
+      <ToastStack toasts={toasts} onDismiss={dismissToast} />
+    </div>
+  );
+}
+
+function TabShell({
+  title,
+  actions,
+  children,
+}: {
+  title: string;
+  actions: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="group relative">
+      <div className="mb-3 flex items-center justify-between">
+        <h2 className="text-xs font-medium uppercase tracking-wide text-ink-muted">{title}</h2>
+        {actions}
+      </div>
+      {children}
     </div>
   );
 }
