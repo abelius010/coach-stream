@@ -58,6 +58,32 @@ export type NutritionPlanData = {
   coachNote: string;
 };
 
+export type WeightLog = { id: string; date: string; kg: number };
+export type ReviewMeasurements = {
+  chest?: number;
+  arm?: number;
+  waist?: number;
+  hip?: number;
+  thigh?: number;
+};
+export type Review = {
+  id: string;
+  date: string;
+  weight?: number;
+  bodyFat?: number;
+  measurements?: ReviewMeasurements;
+  notes?: string;
+  photos?: string[];
+};
+export type MediaFile = {
+  id: string;
+  name: string;
+  url: string;
+  kind: "image" | "video" | "file";
+  uploadedAt: string;
+};
+export type ChatMsg = { id: string; from: "coach" | "student"; text: string; time: string };
+
 export const genId = (prefix: string) =>
   `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 
@@ -101,6 +127,22 @@ export const seedNutritionPlan = (): NutritionPlanData => ({
   })),
 });
 
+export const starterRoutine = (): RoutineWeek[] => [
+  {
+    id: genId("wk"),
+    week: "Semana 1",
+    days: [{ id: genId("day"), day: "Día 1", exercises: [] }],
+  },
+];
+
+export const starterNutritionPlan = (): NutritionPlanData => ({
+  targets: { kcal: 0, protein: 0, carbs: 0, fat: 0 },
+  coachNote: "",
+  meals: [
+    { id: genId("meal"), name: "Desayuno", time: "", photo: null, notes: "", items: [] },
+  ],
+});
+
 type State = {
   students: StudentExt[];
   role: DemoRole;
@@ -108,6 +150,11 @@ type State = {
   nutritionTemplates: NutritionTemplate[];
   routines: Record<string, RoutineWeek[]>;
   nutritionPlans: Record<string, NutritionPlanData>;
+  weightLogs: Record<string, WeightLog[]>;
+  reviews: Record<string, Review[]>;
+  habitsConfigured: Record<string, boolean>;
+  media: Record<string, MediaFile[]>;
+  messages: Record<string, ChatMsg[]>;
   setRole: (r: DemoRole) => void;
   addWorkoutTemplate: (t: Omit<WorkoutTemplate, "id" | "createdAt">) => void;
   addNutritionTemplate: (t: Omit<NutritionTemplate, "id" | "createdAt">) => void;
@@ -116,6 +163,12 @@ type State = {
   removeStudent: (id: string) => void;
   setRoutine: (studentId: string, weeks: RoutineWeek[]) => void;
   setNutritionPlan: (studentId: string, plan: NutritionPlanData) => void;
+  addReview: (studentId: string, review: Omit<Review, "id">) => void;
+  removeReview: (studentId: string, reviewId: string) => void;
+  configureHabits: (studentId: string) => void;
+  addMedia: (studentId: string, file: Omit<MediaFile, "id" | "uploadedAt">) => void;
+  removeMedia: (studentId: string, fileId: string) => void;
+  sendMessage: (studentId: string, msg: Omit<ChatMsg, "id" | "time">) => void;
   resetDemo: () => void;
 };
 
@@ -149,6 +202,13 @@ export const useDemoStore = create<State>()(
         { id: "nt-maint-2400", name: "Mantenimiento 2.400 kcal", createdAt: "hace 2 sem", summary: "Balance macros para recomposición" },
         { id: "nt-bulk-2900", name: "Volumen limpio 2.900 kcal", createdAt: "hace 1 mes", summary: "Superávit ligero · alta proteína" },
       ],
+      routines: {},
+      nutritionPlans: {},
+      weightLogs: {},
+      reviews: {},
+      habitsConfigured: {},
+      media: {},
+      messages: {},
       setRole: (r) => set({ role: r }),
       addWorkoutTemplate: (t) =>
         set({
@@ -209,21 +269,91 @@ export const useDemoStore = create<State>()(
           students: get().students.map((s) => (s.id === id ? { ...s, ...patch } : s)),
         }),
       removeStudent: (id) => set({ students: get().students.filter((s) => s.id !== id) }),
-      routines: {},
       setRoutine: (studentId, weeks) =>
         set({ routines: { ...get().routines, [studentId]: weeks } }),
-      nutritionPlans: {},
       setNutritionPlan: (studentId, plan) =>
         set({ nutritionPlans: { ...get().nutritionPlans, [studentId]: plan } }),
-      resetDemo: () => set({ students: seedStudents as StudentExt[], routines: {}, nutritionPlans: {} }),
+      addReview: (studentId, review) => {
+        const state = get();
+        const newReview: Review = { id: genId("rev"), ...review };
+        const list = [...(state.reviews[studentId] ?? []), newReview].sort((a, b) =>
+          a.date.localeCompare(b.date),
+        );
+        const patch: Partial<State> = { reviews: { ...state.reviews, [studentId]: list } };
+        if (typeof review.weight === "number" && !Number.isNaN(review.weight)) {
+          const logs = [
+            ...(state.weightLogs[studentId] ?? []),
+            { id: genId("wl"), date: review.date, kg: review.weight },
+          ].sort((a, b) => a.date.localeCompare(b.date));
+          patch.weightLogs = { ...state.weightLogs, [studentId]: logs };
+          patch.students = state.students.map((s) =>
+            s.id === studentId
+              ? {
+                  ...s,
+                  weight: review.weight!,
+                  bodyFat: review.bodyFat ?? s.bodyFat,
+                  measurements: { ...(s.measurements ?? {}), ...(review.measurements ?? {}) },
+                }
+              : s,
+          );
+        }
+        set(patch as State);
+      },
+      removeReview: (studentId, reviewId) => {
+        const state = get();
+        const target = (state.reviews[studentId] ?? []).find((r) => r.id === reviewId);
+        const list = (state.reviews[studentId] ?? []).filter((r) => r.id !== reviewId);
+        const patch: Partial<State> = { reviews: { ...state.reviews, [studentId]: list } };
+        if (target) {
+          const logs = (state.weightLogs[studentId] ?? []).filter(
+            (l) => !(l.date === target.date && l.kg === target.weight),
+          );
+          patch.weightLogs = { ...state.weightLogs, [studentId]: logs };
+        }
+        set(patch as State);
+      },
+      configureHabits: (studentId) =>
+        set({ habitsConfigured: { ...get().habitsConfigured, [studentId]: true } }),
+      addMedia: (studentId, file) => {
+        const state = get();
+        const list = [
+          { id: genId("mf"), uploadedAt: new Date().toISOString(), ...file },
+          ...(state.media[studentId] ?? []),
+        ];
+        set({ media: { ...state.media, [studentId]: list } });
+      },
+      removeMedia: (studentId, fileId) => {
+        const state = get();
+        const list = (state.media[studentId] ?? []).filter((f) => f.id !== fileId);
+        set({ media: { ...state.media, [studentId]: list } });
+      },
+      sendMessage: (studentId, msg) => {
+        const state = get();
+        const time = new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+        const list = [...(state.messages[studentId] ?? []), { id: genId("msg"), time, ...msg }];
+        set({ messages: { ...state.messages, [studentId]: list } });
+      },
+      resetDemo: () =>
+        set({
+          students: seedStudents as StudentExt[],
+          routines: {},
+          nutritionPlans: {},
+          weightLogs: {},
+          reviews: {},
+          habitsConfigured: {},
+          media: {},
+          messages: {},
+        }),
     }),
     {
       name: "fitflow-demo",
-      version: 2,
+      version: 3,
       migrate: (persisted: unknown, _v: number) => persisted as State,
       storage: createJSONStorage(() => localStorage),
     },
   ),
 );
+
+export const isNewStudent = (s?: StudentExt | null) => !!s?.createdAt;
 
 export const useHydratedStudents = () => useDemoStore((s) => s.students);
