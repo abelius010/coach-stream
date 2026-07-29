@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { students as seedStudents, workoutWeeks as seedWorkoutWeeks, type Student } from "./demo-data";
+import { students as seedStudents, workoutWeeks as seedWorkoutWeeks, nutritionPlan as seedNutrition, type Student } from "./demo-data";
 
 export type StudentExt = Student & {
   lastName?: string;
