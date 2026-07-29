@@ -18,6 +18,7 @@ import {
   setMode,
 } from "../lib/fitflow-mode";
 import { useDemoStore } from "../lib/demo-store";
+import { RoleSwitcher } from "@/components/dev/RoleSwitcher";
 
 export const Route = createFileRoute("/demo")({
   head: () => ({
@@ -153,7 +154,8 @@ function DemoLayout() {
               className="h-9 w-full rounded-lg border border-border bg-surface pl-9 pr-3 text-sm outline-none placeholder:text-ink-muted focus:border-foreground/20"
             />
           </div>
-          <div className="ml-auto flex items-center gap-1">
+          <div className="ml-auto flex items-center gap-2">
+            <RoleSwitcher />
             <button
               onClick={exitToLanding}
               className="hidden rounded-md px-2.5 py-1.5 text-xs text-ink-muted hover:bg-surface hover:text-foreground md:inline-flex"
