@@ -122,7 +122,7 @@ export function NutritionPlan({
                 onClick={save}
                 className="inline-flex items-center gap-1.5 rounded-lg bg-foreground px-3 py-1.5 text-xs font-medium text-background hover:opacity-90"
               >
-                <Save className="h-3.5 w-3.5" /> Guardar cambios
+                <Save className="h-3.5 w-3.5" /> Guardar y asignar
               </button>
             </div>
           )}
