@@ -204,6 +204,9 @@ type State = {
   setExerciseNote: (studentId: string, dayId: string, exerciseId: string, note: string) => void;
   finishDay: (studentId: string, dayId: string) => void;
   resetDayProgress: (studentId: string, dayId: string) => void;
+  setMealPhoto: (studentId: string, mealId: string, photo: string | null) => void;
+  toggleMealDone: (studentId: string, mealId: string) => void;
+  setMealNote: (studentId: string, mealId: string, note: string) => void;
   resetDemo: () => void;
 };
 
