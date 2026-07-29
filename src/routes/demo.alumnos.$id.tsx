@@ -176,7 +176,7 @@ function StudentDetail() {
             {nutritionDeleted ? (
               <EmptyDeletedState kind="nutrition" />
             ) : (
-              <NutricionTab />
+              <NutritionPlan studentId={student.id} onToast={pushToast} />
             )}
           </TabShell>
         )}
