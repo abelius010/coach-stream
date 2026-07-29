@@ -247,6 +247,20 @@ function StudentDetail() {
         {tab === "chat" && <ChatTab student={student} isNew={isNew} />}
       </div>
       <EditStudentSheet student={student} open={editing} onClose={() => setEditing(false)} />
+      <DeleteStudentDialog
+        open={confirmDelete}
+        studentName={student.name}
+        onClose={() => setConfirmDelete(false)}
+        onConfirm={() => {
+          const name = student.name;
+          setConfirmDelete(false);
+          removeStudent(student.id);
+          navigate({
+            to: "/demo/alumnos",
+            search: { deleted: name } as never,
+          }).catch(() => navigate({ to: "/demo/alumnos" }));
+        }}
+      />
       <ToastStack toasts={toasts} onDismiss={dismissToast} />
     </div>
   );
