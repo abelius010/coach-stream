@@ -573,6 +573,50 @@ const createFitFlowStore = (persistName: string, seed: Seed) =>
             },
           });
         },
+        addExtraMeal: (studentId, meal) => {
+          const state = get();
+          const list = state.nutritionExtras[studentId] ?? [];
+          const extra: ExtraMeal = {
+            id: genId("xmeal"),
+            createdAt: new Date().toISOString(),
+            ...meal,
+          };
+          set({
+            nutritionExtras: { ...state.nutritionExtras, [studentId]: [...list, extra] },
+          });
+        },
+        updateExtraMeal: (studentId, mealId, patch) => {
+          const state = get();
+          const list = (state.nutritionExtras[studentId] ?? []).map((m) =>
+            m.id === mealId ? { ...m, ...patch } : m,
+          );
+          set({ nutritionExtras: { ...state.nutritionExtras, [studentId]: list } });
+        },
+        removeExtraMeal: (studentId, mealId) => {
+          const state = get();
+          const list = (state.nutritionExtras[studentId] ?? []).filter((m) => m.id !== mealId);
+          set({ nutritionExtras: { ...state.nutritionExtras, [studentId]: list } });
+        },
+        finishNutritionDay: (studentId) => {
+          const state = get();
+          const idx = (state.nutritionDayIndex[studentId] ?? 1) + 1;
+          set({
+            nutritionProgress: { ...state.nutritionProgress, [studentId]: {} },
+            nutritionExtras: { ...state.nutritionExtras, [studentId]: [] },
+            habitsLog: { ...state.habitsLog, [studentId]: {} },
+            nutritionDayIndex: { ...state.nutritionDayIndex, [studentId]: idx },
+          });
+        },
+        updateHabit: (studentId, patch) => {
+          const state = get();
+          const current = state.habitsLog[studentId] ?? {};
+          set({
+            habitsLog: {
+              ...state.habitsLog,
+              [studentId]: { ...current, ...patch, updatedAt: new Date().toISOString() },
+            },
+          });
+        },
         resetDemo: () =>
           set({
             students: seed.students,
@@ -587,6 +631,9 @@ const createFitFlowStore = (persistName: string, seed: Seed) =>
             messages: {},
             workoutProgress: {},
             nutritionProgress: {},
+            nutritionExtras: {},
+            nutritionDayIndex: {},
+            habitsLog: {},
           }),
       }),
       {
