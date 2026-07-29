@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { students as seedStudents, workoutWeeks as seedWorkoutWeeks, type Student } from "./demo-data";
+import { students as seedStudents, workoutWeeks as seedWorkoutWeeks, nutritionPlan as seedNutrition, type Student } from "./demo-data";
 
 export type StudentExt = Student & {
   lastName?: string;
@@ -43,6 +43,21 @@ export type RoutineExercise = {
 export type RoutineDay = { id: string; day: string; done?: boolean; exercises: RoutineExercise[] };
 export type RoutineWeek = { id: string; week: string; days: RoutineDay[] };
 
+export type NutritionItem = { id: string; name: string; qty: string; unit: string };
+export type NutritionMeal = {
+  id: string;
+  name: string;
+  time?: string;
+  photo?: string | null;
+  notes: string;
+  items: NutritionItem[];
+};
+export type NutritionPlanData = {
+  targets: { kcal: number; protein: number; carbs: number; fat: number };
+  meals: NutritionMeal[];
+  coachNote: string;
+};
+
 export const genId = (prefix: string) =>
   `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
 
@@ -67,12 +82,32 @@ export const seedRoutine = (): RoutineWeek[] =>
     })),
   }));
 
+const parseItem = (s: string): { name: string; qty: string; unit: string } => {
+  const m = /^(.+?)\s+(\d+(?:[.,]\d+)?)\s*([a-zA-ZáéíóúñÁÉÍÓÚÑ]+)?\s*$/.exec(s);
+  if (m) return { name: m[1].trim(), qty: m[2].replace(",", "."), unit: (m[3] ?? "").trim() };
+  return { name: s, qty: "", unit: "" };
+};
+
+export const seedNutritionPlan = (): NutritionPlanData => ({
+  targets: { ...seedNutrition.targets },
+  coachNote: seedNutrition.coachNote,
+  meals: seedNutrition.meals.map((m) => ({
+    id: genId("meal"),
+    name: m.name,
+    time: m.time,
+    photo: m.photo,
+    notes: "",
+    items: m.items.map((it) => ({ id: genId("it"), ...parseItem(it) })),
+  })),
+});
+
 type State = {
   students: StudentExt[];
   role: DemoRole;
   workoutTemplates: WorkoutTemplate[];
   nutritionTemplates: NutritionTemplate[];
   routines: Record<string, RoutineWeek[]>;
+  nutritionPlans: Record<string, NutritionPlanData>;
   setRole: (r: DemoRole) => void;
   addWorkoutTemplate: (t: Omit<WorkoutTemplate, "id" | "createdAt">) => void;
   addNutritionTemplate: (t: Omit<NutritionTemplate, "id" | "createdAt">) => void;
@@ -80,6 +115,7 @@ type State = {
   updateStudent: (id: string, patch: Partial<StudentExt>) => void;
   removeStudent: (id: string) => void;
   setRoutine: (studentId: string, weeks: RoutineWeek[]) => void;
+  setNutritionPlan: (studentId: string, plan: NutritionPlanData) => void;
   resetDemo: () => void;
 };
 
@@ -176,7 +212,10 @@ export const useDemoStore = create<State>()(
       routines: {},
       setRoutine: (studentId, weeks) =>
         set({ routines: { ...get().routines, [studentId]: weeks } }),
-      resetDemo: () => set({ students: seedStudents as StudentExt[], routines: {} }),
+      nutritionPlans: {},
+      setNutritionPlan: (studentId, plan) =>
+        set({ nutritionPlans: { ...get().nutritionPlans, [studentId]: plan } }),
+      resetDemo: () => set({ students: seedStudents as StudentExt[], routines: {}, nutritionPlans: {} }),
     }),
     {
       name: "fitflow-demo",
