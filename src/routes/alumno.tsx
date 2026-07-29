@@ -1,5 +1,6 @@
 import { createFileRoute, Outlet, Link, useRouterState } from "@tanstack/react-router";
 import { Home, Dumbbell, Salad, MessageCircle, User } from "lucide-react";
+import { RoleSwitcher } from "@/components/dev/RoleSwitcher";
 
 export const Route = createFileRoute("/alumno")({
   head: () => ({
@@ -33,6 +34,9 @@ function AlumnoLayout() {
 
   return (
     <div className="min-h-screen bg-surface text-foreground">
+      <div className="fixed left-1/2 top-3 z-30 -translate-x-1/2">
+        <RoleSwitcher />
+      </div>
       <div className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-background shadow-soft">
         <main className="flex-1 pb-24">
           <Outlet />
