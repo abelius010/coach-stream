@@ -795,8 +795,8 @@ function MealCard({
 }) {
   const [confirmDel, setConfirmDel] = useState(false);
   const actions: ActionItem[] = [
-    { label: "Subir", icon: <ChevronDown className="h-3.5 w-3.5" />, onClick: () => onMove(-1), disabled: isFirst },
-    { label: "Bajar", icon: <ChevronDown className="h-3.5 w-3.5" />, onClick: () => onMove(1), disabled: isLast },
+    ...(isFirst ? [] : [{ label: "Subir", icon: <ChevronDown className="h-3.5 w-3.5 rotate-180" />, onClick: () => onMove(-1) }]),
+    ...(isLast ? [] : [{ label: "Bajar", icon: <ChevronDown className="h-3.5 w-3.5" />, onClick: () => onMove(1) }]),
     { label: "Duplicar", icon: <Copy className="h-3.5 w-3.5" />, onClick: onDuplicate },
     { label: "Eliminar", icon: <Trash2 className="h-3.5 w-3.5" />, danger: true, onClick: () => setConfirmDel(true) },
   ];
