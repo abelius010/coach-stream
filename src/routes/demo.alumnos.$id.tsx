@@ -52,6 +52,13 @@ function StudentDetail() {
   const student = useDemoStore((s) => s.students.find((x) => x.id === id));
   const [tab, setTab] = useState<TabId>("resumen");
   const [editing, setEditing] = useState(false);
+  const [toasts, setToasts] = useState<ToastData[]>([]);
+  const [workoutDeleted, setWorkoutDeleted] = useState(false);
+  const [nutritionDeleted, setNutritionDeleted] = useState(false);
+  const pushToast = (text: string) =>
+    setToasts((prev) => [...prev, { id: Date.now() + Math.random(), text }]);
+  const dismissToast = (tid: number) =>
+    setToasts((prev) => prev.filter((t) => t.id !== tid));
 
   if (!student) {
     return (
