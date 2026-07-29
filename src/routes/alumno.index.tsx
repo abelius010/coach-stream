@@ -14,8 +14,10 @@ import {
   Clock,
   ArrowRight,
 } from "lucide-react";
-import { useDemoStore, parseSetsCount, type RoutineDay, type RoutineWeek } from "@/lib/demo-store";
+import { useDemoStore, parseSetsCount, type RoutineDay, type RoutineWeek, type ChatMsg } from "@/lib/demo-store";
 import { useActiveAlumnoId, getAccountProfile, displayName } from "@/lib/fitflow-mode";
+
+const EMPTY_MESSAGES: ChatMsg[] = [];
 
 export const Route = createFileRoute("/alumno/")({
   head: () => ({
