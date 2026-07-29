@@ -212,7 +212,10 @@ export const useDemoStore = create<State>()(
       routines: {},
       setRoutine: (studentId, weeks) =>
         set({ routines: { ...get().routines, [studentId]: weeks } }),
-      resetDemo: () => set({ students: seedStudents as StudentExt[], routines: {} }),
+      nutritionPlans: {},
+      setNutritionPlan: (studentId, plan) =>
+        set({ nutritionPlans: { ...get().nutritionPlans, [studentId]: plan } }),
+      resetDemo: () => set({ students: seedStudents as StudentExt[], routines: {}, nutritionPlans: {} }),
     }),
     {
       name: "fitflow-demo",
