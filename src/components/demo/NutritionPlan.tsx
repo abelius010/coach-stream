@@ -118,34 +118,32 @@ function NutritionView({ meals }: { meals: NutritionMeal[] }) {
   return (
     <div className="space-y-3">
       {meals.map((m) => (
-        <div key={m.id} className="overflow-hidden rounded-2xl border border-border bg-background md:flex">
-          {m.photo && (
-            <img src={m.photo} alt="" className="h-40 w-full object-cover md:h-auto md:w-48" />
-          )}
-          <div className="flex-1 p-5">
-            <div className="flex flex-wrap items-baseline justify-between gap-2">
-              <div>
-                <div className="text-sm font-semibold">{m.name}</div>
-                {m.time && <div className="text-xs text-ink-muted">{m.time}</div>}
-              </div>
-              <div className="text-xs text-ink-muted">
-                {m.items.length} {m.items.length === 1 ? "alimento" : "alimentos"}
-              </div>
+        <div key={m.id} className="rounded-2xl border border-border bg-background p-5">
+          <div className="flex items-baseline justify-between gap-3">
+            <div className="min-w-0">
+              <div className="text-sm font-semibold">{m.name}</div>
+              {m.time && <div className="text-xs text-ink-muted">{m.time}</div>}
             </div>
-            <ul className="mt-3 space-y-1 text-sm text-ink-muted">
-              {m.items.map((i) => (
-                <li key={i.id}>· {formatItem(i)}</li>
-              ))}
-              {m.items.length === 0 && (
-                <li className="text-xs italic">Sin alimentos.</li>
-              )}
-            </ul>
-            {m.notes && (
-              <p className="mt-3 rounded-lg bg-surface/60 px-3 py-2 text-xs text-ink-muted">
-                <span className="font-medium text-foreground">Observaciones:</span> {m.notes}
-              </p>
-            )}
+            <div className="shrink-0 text-xs text-ink-muted">
+              {m.items.length} {m.items.length === 1 ? "alimento" : "alimentos"}
+            </div>
           </div>
+          <ul className="mt-3 space-y-1 text-sm text-ink-muted">
+            {m.items.map((i) => (
+              <li key={i.id} className="flex items-baseline gap-2">
+                <span className="text-foreground">·</span>
+                <span className="min-w-0">{formatItem(i)}</span>
+              </li>
+            ))}
+            {m.items.length === 0 && (
+              <li className="text-xs italic">Sin alimentos.</li>
+            )}
+          </ul>
+          {m.notes && (
+            <p className="mt-3 rounded-lg bg-surface/60 px-3 py-2 text-xs text-ink-muted">
+              <span className="font-medium text-foreground">Observaciones:</span> {m.notes}
+            </p>
+          )}
         </div>
       ))}
       {meals.length === 0 && (
