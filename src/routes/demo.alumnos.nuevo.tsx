@@ -3,6 +3,8 @@ import { useState } from "react";
 import { ArrowLeft, ArrowRight, Check, X } from "lucide-react";
 import { useDemoStore, type NewStudentInput } from "../lib/demo-store";
 import { Field, inputCls, selectCls, textareaCls } from "../components/demo/Field";
+import { useMode, getAccountProfile, getPlanLimit } from "../lib/fitflow-mode";
+import { PlanLimitBanner } from "../components/demo/PlanLimitBanner";
 
 export const Route = createFileRoute("/demo/alumnos/nuevo")({
   component: NuevoAlumno,
