@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RegistroRouteImport } from './routes/registro'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DemoIndexRouteImport } from './routes/demo.index'
@@ -18,6 +19,11 @@ import { Route as DemoAlumnosIndexRouteImport } from './routes/demo.alumnos.inde
 import { Route as DemoAlumnosNuevoRouteImport } from './routes/demo.alumnos.nuevo'
 import { Route as DemoAlumnosIdRouteImport } from './routes/demo.alumnos.$id'
 
+const RegistroRoute = RegistroRouteImport.update({
+  id: '/registro',
+  path: '/registro',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DemoRoute = DemoRouteImport.update({
   id: '/demo',
   path: '/demo',
@@ -62,6 +68,7 @@ const DemoAlumnosIdRoute = DemoAlumnosIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/demo': typeof DemoRouteWithChildren
+  '/registro': typeof RegistroRoute
   '/demo/bandeja': typeof DemoBandejaRoute
   '/demo/chat': typeof DemoChatRoute
   '/demo/': typeof DemoIndexRoute
@@ -71,6 +78,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/registro': typeof RegistroRoute
   '/demo/bandeja': typeof DemoBandejaRoute
   '/demo/chat': typeof DemoChatRoute
   '/demo': typeof DemoIndexRoute
@@ -82,6 +90,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/demo': typeof DemoRouteWithChildren
+  '/registro': typeof RegistroRoute
   '/demo/bandeja': typeof DemoBandejaRoute
   '/demo/chat': typeof DemoChatRoute
   '/demo/': typeof DemoIndexRoute
@@ -94,6 +103,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/demo'
+    | '/registro'
     | '/demo/bandeja'
     | '/demo/chat'
     | '/demo/'
@@ -103,6 +113,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/registro'
     | '/demo/bandeja'
     | '/demo/chat'
     | '/demo'
@@ -113,6 +124,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/demo'
+    | '/registro'
     | '/demo/bandeja'
     | '/demo/chat'
     | '/demo/'
@@ -124,10 +136,18 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DemoRoute: typeof DemoRouteWithChildren
+  RegistroRoute: typeof RegistroRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/registro': {
+      id: '/registro'
+      path: '/registro'
+      fullPath: '/registro'
+      preLoaderRoute: typeof RegistroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/demo': {
       id: '/demo'
       path: '/demo'
@@ -210,6 +230,7 @@ const DemoRouteWithChildren = DemoRoute._addFileChildren(DemoRouteChildren)
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DemoRoute: DemoRouteWithChildren,
+  RegistroRoute: RegistroRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -1,6 +1,7 @@
-import { create } from "zustand";
+import { create, type StoreApi, type UseBoundStore } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { students as seedStudents, workoutWeeks as seedWorkoutWeeks, nutritionPlan as seedNutrition, type Student } from "./demo-data";
+import { getMode } from "./fitflow-mode";
 
 export type StudentExt = Student & {
   lastName?: string;
@@ -187,188 +188,230 @@ const uniqueId = (base: string, existing: string[]) => {
   return id;
 };
 
-export const useDemoStore = create<State>()(
-  persist(
-    (set, get) => ({
-      students: seedStudents as StudentExt[],
-      role: "coach" as DemoRole,
-      workoutTemplates: [
-        { id: "wt-fullbody-3d", name: "Full Body 3 días", createdAt: "hace 2 sem", summary: "Rutina base para principiantes · 3 sesiones/semana" },
-        { id: "wt-ppl-5d", name: "Push · Pull · Legs (5 días)", createdAt: "hace 1 mes", summary: "Split clásico para intermedios · foco hipertrofia" },
-        { id: "wt-upper-lower", name: "Upper / Lower 4 días", createdAt: "hace 3 días", summary: "Volumen equilibrado · 4 sesiones/semana" },
-      ],
-      nutritionTemplates: [
-        { id: "nt-deficit-1800", name: "Déficit moderado 1.800 kcal", createdAt: "hace 1 sem", summary: "40/30/30 · pérdida de grasa controlada" },
-        { id: "nt-maint-2400", name: "Mantenimiento 2.400 kcal", createdAt: "hace 2 sem", summary: "Balance macros para recomposición" },
-        { id: "nt-bulk-2900", name: "Volumen limpio 2.900 kcal", createdAt: "hace 1 mes", summary: "Superávit ligero · alta proteína" },
-      ],
-      routines: {},
-      nutritionPlans: {},
-      weightLogs: {},
-      reviews: {},
-      habitsConfigured: {},
-      media: {},
-      messages: {},
-      setRole: (r) => set({ role: r }),
-      addWorkoutTemplate: (t) =>
-        set({
-          workoutTemplates: [
-            { id: `wt-${Date.now()}`, createdAt: "ahora", ...t },
-            ...get().workoutTemplates,
-          ],
-        }),
-      addNutritionTemplate: (t) =>
-        set({
-          nutritionTemplates: [
-            { id: `nt-${Date.now()}`, createdAt: "ahora", ...t },
-            ...get().nutritionTemplates,
-          ],
-        }),
-      addStudent: (input) => {
-        const state = get();
-        const base = slug(`${input.name} ${input.lastName ?? ""}`.trim());
-        const id = uniqueId(base, state.students.map((s) => s.id));
-        const now = new Date().toISOString();
-        const student: StudentExt = {
-          id,
-          name: `${input.name}${input.lastName ? " " + input.lastName : ""}`.trim(),
-          avatar: input.avatar || `https://i.pravatar.cc/160?u=${id}`,
-          goal: input.goal || "Sin objetivo",
-          weight: input.weight ?? 0,
-          weightStart: input.weightStart ?? input.weight ?? 0,
-          weightGoal: input.weightGoal ?? input.weight ?? 0,
-          status: input.status ?? "activo",
-          lastActive: "Recién creado",
-          compliance: 0,
-          startDate: input.startDate || new Date().toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" }),
-          height: input.height ?? 0,
-          age: input.age ?? 0,
-          plan: input.plan || "Sin plan asignado",
-          lastName: input.lastName,
-          email: input.email,
-          phone: input.phone,
-          birthDate: input.birthDate,
-          sex: input.sex,
-          bodyFat: input.bodyFat,
-          measurements: input.measurements,
-          secondaryGoal: input.secondaryGoal,
-          experience: input.experience,
-          daysPerWeek: input.daysPerWeek,
-          sessionMinutes: input.sessionMinutes,
-          equipment: input.equipment,
-          preference: input.preference,
-          injuries: input.injuries,
-          coachNotes: input.coachNotes,
-          createdAt: now,
-        };
-        set({ students: [student, ...state.students] });
-        return id;
-      },
-      updateStudent: (id, patch) =>
-        set({
-          students: get().students.map((s) => (s.id === id ? { ...s, ...patch } : s)),
-        }),
-      removeStudent: (id) => {
-        const s = get();
-        const omit = <T,>(r: Record<string, T>) => {
-          const { [id]: _drop, ...rest } = r;
-          return rest;
-        };
-        set({
-          students: s.students.filter((x) => x.id !== id),
-          routines: omit(s.routines),
-          nutritionPlans: omit(s.nutritionPlans),
-          weightLogs: omit(s.weightLogs),
-          reviews: omit(s.reviews),
-          habitsConfigured: omit(s.habitsConfigured),
-          media: omit(s.media),
-          messages: omit(s.messages),
-        });
-      },
-      setRoutine: (studentId, weeks) =>
-        set({ routines: { ...get().routines, [studentId]: weeks } }),
-      setNutritionPlan: (studentId, plan) =>
-        set({ nutritionPlans: { ...get().nutritionPlans, [studentId]: plan } }),
-      addReview: (studentId, review) => {
-        const state = get();
-        const newReview: Review = { id: genId("rev"), ...review };
-        const list = [...(state.reviews[studentId] ?? []), newReview].sort((a, b) =>
-          a.date.localeCompare(b.date),
-        );
-        const patch: Partial<State> = { reviews: { ...state.reviews, [studentId]: list } };
-        if (typeof review.weight === "number" && !Number.isNaN(review.weight)) {
-          const logs = [
-            ...(state.weightLogs[studentId] ?? []),
-            { id: genId("wl"), date: review.date, kg: review.weight },
-          ].sort((a, b) => a.date.localeCompare(b.date));
-          patch.weightLogs = { ...state.weightLogs, [studentId]: logs };
-          patch.students = state.students.map((s) =>
-            s.id === studentId
-              ? {
-                  ...s,
-                  weight: review.weight!,
-                  bodyFat: review.bodyFat ?? s.bodyFat,
-                  measurements: { ...(s.measurements ?? {}), ...(review.measurements ?? {}) },
-                }
-              : s,
+type Seed = {
+  students: StudentExt[];
+  workoutTemplates: WorkoutTemplate[];
+  nutritionTemplates: NutritionTemplate[];
+};
+
+const DEMO_SEED: Seed = {
+  students: seedStudents as StudentExt[],
+  workoutTemplates: [
+    { id: "wt-fullbody-3d", name: "Full Body 3 días", createdAt: "hace 2 sem", summary: "Rutina base para principiantes · 3 sesiones/semana" },
+    { id: "wt-ppl-5d", name: "Push · Pull · Legs (5 días)", createdAt: "hace 1 mes", summary: "Split clásico para intermedios · foco hipertrofia" },
+    { id: "wt-upper-lower", name: "Upper / Lower 4 días", createdAt: "hace 3 días", summary: "Volumen equilibrado · 4 sesiones/semana" },
+  ],
+  nutritionTemplates: [
+    { id: "nt-deficit-1800", name: "Déficit moderado 1.800 kcal", createdAt: "hace 1 sem", summary: "40/30/30 · pérdida de grasa controlada" },
+    { id: "nt-maint-2400", name: "Mantenimiento 2.400 kcal", createdAt: "hace 2 sem", summary: "Balance macros para recomposición" },
+    { id: "nt-bulk-2900", name: "Volumen limpio 2.900 kcal", createdAt: "hace 1 mes", summary: "Superávit ligero · alta proteína" },
+  ],
+};
+
+const EMPTY_SEED: Seed = {
+  students: [],
+  workoutTemplates: [],
+  nutritionTemplates: [],
+};
+
+const createFitFlowStore = (persistName: string, seed: Seed) =>
+  create<State>()(
+    persist(
+      (set, get) => ({
+        students: seed.students,
+        role: "coach" as DemoRole,
+        workoutTemplates: seed.workoutTemplates,
+        nutritionTemplates: seed.nutritionTemplates,
+        routines: {},
+        nutritionPlans: {},
+        weightLogs: {},
+        reviews: {},
+        habitsConfigured: {},
+        media: {},
+        messages: {},
+        setRole: (r) => set({ role: r }),
+        addWorkoutTemplate: (t) =>
+          set({
+            workoutTemplates: [
+              { id: `wt-${Date.now()}`, createdAt: "ahora", ...t },
+              ...get().workoutTemplates,
+            ],
+          }),
+        addNutritionTemplate: (t) =>
+          set({
+            nutritionTemplates: [
+              { id: `nt-${Date.now()}`, createdAt: "ahora", ...t },
+              ...get().nutritionTemplates,
+            ],
+          }),
+        addStudent: (input) => {
+          const state = get();
+          const base = slug(`${input.name} ${input.lastName ?? ""}`.trim());
+          const id = uniqueId(base, state.students.map((s) => s.id));
+          const now = new Date().toISOString();
+          const student: StudentExt = {
+            id,
+            name: `${input.name}${input.lastName ? " " + input.lastName : ""}`.trim(),
+            avatar: input.avatar || `https://i.pravatar.cc/160?u=${id}`,
+            goal: input.goal || "Sin objetivo",
+            weight: input.weight ?? 0,
+            weightStart: input.weightStart ?? input.weight ?? 0,
+            weightGoal: input.weightGoal ?? input.weight ?? 0,
+            status: input.status ?? "activo",
+            lastActive: "Recién creado",
+            compliance: 0,
+            startDate: input.startDate || new Date().toLocaleDateString("es-ES", { day: "numeric", month: "short", year: "numeric" }),
+            height: input.height ?? 0,
+            age: input.age ?? 0,
+            plan: input.plan || "Sin plan asignado",
+            lastName: input.lastName,
+            email: input.email,
+            phone: input.phone,
+            birthDate: input.birthDate,
+            sex: input.sex,
+            bodyFat: input.bodyFat,
+            measurements: input.measurements,
+            secondaryGoal: input.secondaryGoal,
+            experience: input.experience,
+            daysPerWeek: input.daysPerWeek,
+            sessionMinutes: input.sessionMinutes,
+            equipment: input.equipment,
+            preference: input.preference,
+            injuries: input.injuries,
+            coachNotes: input.coachNotes,
+            createdAt: now,
+          };
+          set({ students: [student, ...state.students] });
+          return id;
+        },
+        updateStudent: (id, patch) =>
+          set({
+            students: get().students.map((s) => (s.id === id ? { ...s, ...patch } : s)),
+          }),
+        removeStudent: (id) => {
+          const s = get();
+          const omit = <T,>(r: Record<string, T>) => {
+            const { [id]: _drop, ...rest } = r;
+            return rest;
+          };
+          set({
+            students: s.students.filter((x) => x.id !== id),
+            routines: omit(s.routines),
+            nutritionPlans: omit(s.nutritionPlans),
+            weightLogs: omit(s.weightLogs),
+            reviews: omit(s.reviews),
+            habitsConfigured: omit(s.habitsConfigured),
+            media: omit(s.media),
+            messages: omit(s.messages),
+          });
+        },
+        setRoutine: (studentId, weeks) =>
+          set({ routines: { ...get().routines, [studentId]: weeks } }),
+        setNutritionPlan: (studentId, plan) =>
+          set({ nutritionPlans: { ...get().nutritionPlans, [studentId]: plan } }),
+        addReview: (studentId, review) => {
+          const state = get();
+          const newReview: Review = { id: genId("rev"), ...review };
+          const list = [...(state.reviews[studentId] ?? []), newReview].sort((a, b) =>
+            a.date.localeCompare(b.date),
           );
-        }
-        set(patch as State);
+          const patch: Partial<State> = { reviews: { ...state.reviews, [studentId]: list } };
+          if (typeof review.weight === "number" && !Number.isNaN(review.weight)) {
+            const logs = [
+              ...(state.weightLogs[studentId] ?? []),
+              { id: genId("wl"), date: review.date, kg: review.weight },
+            ].sort((a, b) => a.date.localeCompare(b.date));
+            patch.weightLogs = { ...state.weightLogs, [studentId]: logs };
+            patch.students = state.students.map((s) =>
+              s.id === studentId
+                ? {
+                    ...s,
+                    weight: review.weight!,
+                    bodyFat: review.bodyFat ?? s.bodyFat,
+                    measurements: { ...(s.measurements ?? {}), ...(review.measurements ?? {}) },
+                  }
+                : s,
+            );
+          }
+          set(patch as State);
+        },
+        removeReview: (studentId, reviewId) => {
+          const state = get();
+          const target = (state.reviews[studentId] ?? []).find((r) => r.id === reviewId);
+          const list = (state.reviews[studentId] ?? []).filter((r) => r.id !== reviewId);
+          const patch: Partial<State> = { reviews: { ...state.reviews, [studentId]: list } };
+          if (target) {
+            const logs = (state.weightLogs[studentId] ?? []).filter(
+              (l) => !(l.date === target.date && l.kg === target.weight),
+            );
+            patch.weightLogs = { ...state.weightLogs, [studentId]: logs };
+          }
+          set(patch as State);
+        },
+        configureHabits: (studentId) =>
+          set({ habitsConfigured: { ...get().habitsConfigured, [studentId]: true } }),
+        addMedia: (studentId, file) => {
+          const state = get();
+          const list = [
+            { id: genId("mf"), uploadedAt: new Date().toISOString(), ...file },
+            ...(state.media[studentId] ?? []),
+          ];
+          set({ media: { ...state.media, [studentId]: list } });
+        },
+        removeMedia: (studentId, fileId) => {
+          const state = get();
+          const list = (state.media[studentId] ?? []).filter((f) => f.id !== fileId);
+          set({ media: { ...state.media, [studentId]: list } });
+        },
+        sendMessage: (studentId, msg) => {
+          const state = get();
+          const time = new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+          const list = [...(state.messages[studentId] ?? []), { id: genId("msg"), time, ...msg }];
+          set({ messages: { ...state.messages, [studentId]: list } });
+        },
+        resetDemo: () =>
+          set({
+            students: seed.students,
+            workoutTemplates: seed.workoutTemplates,
+            nutritionTemplates: seed.nutritionTemplates,
+            routines: {},
+            nutritionPlans: {},
+            weightLogs: {},
+            reviews: {},
+            habitsConfigured: {},
+            media: {},
+            messages: {},
+          }),
+      }),
+      {
+        name: persistName,
+        version: 3,
+        migrate: (persisted: unknown, _v: number) => persisted as State,
+        storage: createJSONStorage(() => localStorage),
       },
-      removeReview: (studentId, reviewId) => {
-        const state = get();
-        const target = (state.reviews[studentId] ?? []).find((r) => r.id === reviewId);
-        const list = (state.reviews[studentId] ?? []).filter((r) => r.id !== reviewId);
-        const patch: Partial<State> = { reviews: { ...state.reviews, [studentId]: list } };
-        if (target) {
-          const logs = (state.weightLogs[studentId] ?? []).filter(
-            (l) => !(l.date === target.date && l.kg === target.weight),
-          );
-          patch.weightLogs = { ...state.weightLogs, [studentId]: logs };
-        }
-        set(patch as State);
-      },
-      configureHabits: (studentId) =>
-        set({ habitsConfigured: { ...get().habitsConfigured, [studentId]: true } }),
-      addMedia: (studentId, file) => {
-        const state = get();
-        const list = [
-          { id: genId("mf"), uploadedAt: new Date().toISOString(), ...file },
-          ...(state.media[studentId] ?? []),
-        ];
-        set({ media: { ...state.media, [studentId]: list } });
-      },
-      removeMedia: (studentId, fileId) => {
-        const state = get();
-        const list = (state.media[studentId] ?? []).filter((f) => f.id !== fileId);
-        set({ media: { ...state.media, [studentId]: list } });
-      },
-      sendMessage: (studentId, msg) => {
-        const state = get();
-        const time = new Date().toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
-        const list = [...(state.messages[studentId] ?? []), { id: genId("msg"), time, ...msg }];
-        set({ messages: { ...state.messages, [studentId]: list } });
-      },
-      resetDemo: () =>
-        set({
-          students: seedStudents as StudentExt[],
-          routines: {},
-          nutritionPlans: {},
-          weightLogs: {},
-          reviews: {},
-          habitsConfigured: {},
-          media: {},
-          messages: {},
-        }),
-    }),
-    {
-      name: "fitflow-demo",
-      version: 3,
-      migrate: (persisted: unknown, _v: number) => persisted as State,
-      storage: createJSONStorage(() => localStorage),
-    },
-  ),
-);
+    ),
+  );
+
+const demoStore = createFitFlowStore("fitflow-demo", DEMO_SEED);
+const accountStore = createFitFlowStore("fitflow-account", EMPTY_SEED);
+
+const pickStore = (): UseBoundStore<StoreApi<State>> =>
+  getMode() === "account" ? accountStore : demoStore;
+
+// Dispatcher hook: keeps existing API. Selects the store based on current mode.
+export const useDemoStore = (<T>(selector: (state: State) => T): T => {
+  return pickStore()(selector);
+}) as <T>(selector: (state: State) => T) => T;
+
+export const getDemoState = (): State => pickStore().getState();
+
+export const resetAccountStore = () => {
+  accountStore.getState().resetDemo();
+  try {
+    localStorage.removeItem("fitflow-account");
+    localStorage.removeItem("fitflow-demo-nuevo-draft");
+  } catch {}
+};
 
 export const isNewStudent = (s?: StudentExt | null) => !!s?.createdAt;
 

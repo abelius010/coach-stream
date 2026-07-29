@@ -122,7 +122,7 @@ function Nav() {
             Iniciar sesión
           </a>
           <a
-            href="/demo"
+            href="/registro"
             className="inline-flex items-center gap-1.5 rounded-lg bg-foreground px-4 py-2 text-sm font-medium text-background transition-all hover:opacity-90"
           >
             Empieza gratis
@@ -144,7 +144,7 @@ function Nav() {
             <a href="#everything">Funciones</a>
             <a href="#pricing">Precios</a>
             <a href="#faq">FAQ</a>
-            <a href="/demo" className="mt-2 inline-flex items-center justify-center rounded-lg bg-foreground px-4 py-2.5 font-medium text-background">
+            <a href="/registro" className="mt-2 inline-flex items-center justify-center rounded-lg bg-foreground px-4 py-2.5 font-medium text-background">
               Empieza gratis
             </a>
           </div>
@@ -189,7 +189,7 @@ function Hero() {
         <Reveal delay={240}>
           <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <a
-              href="/demo"
+              href="/registro"
               className="inline-flex items-center gap-2 rounded-xl bg-foreground px-6 py-3.5 text-sm font-medium text-background shadow-soft transition-all hover:-translate-y-0.5 hover:shadow-glow"
             >
               Empieza gratis
@@ -197,6 +197,7 @@ function Hero() {
             </a>
             <a
               href="/demo"
+              onClick={() => { try { localStorage.setItem("fitflow-mode", "demo"); } catch {} }}
               className="inline-flex items-center gap-2 rounded-xl border border-border bg-background px-6 py-3.5 text-sm font-medium hover:bg-surface transition-colors"
             >
               <Play className="h-3.5 w-3.5 fill-current" />
@@ -843,7 +844,7 @@ function CTA() {
               Empieza gratis. Configura tu panel en 5 minutos. Cancela cuando quieras.
             </p>
             <a
-              href="/demo"
+              href="/registro"
               className="mt-8 inline-flex items-center gap-2 rounded-xl bg-background px-6 py-3.5 text-sm font-medium text-foreground transition-all hover:-translate-y-0.5"
             >
               Empieza gratis
