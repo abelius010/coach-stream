@@ -107,6 +107,7 @@ type State = {
   workoutTemplates: WorkoutTemplate[];
   nutritionTemplates: NutritionTemplate[];
   routines: Record<string, RoutineWeek[]>;
+  nutritionPlans: Record<string, NutritionPlanData>;
   setRole: (r: DemoRole) => void;
   addWorkoutTemplate: (t: Omit<WorkoutTemplate, "id" | "createdAt">) => void;
   addNutritionTemplate: (t: Omit<NutritionTemplate, "id" | "createdAt">) => void;
@@ -114,6 +115,7 @@ type State = {
   updateStudent: (id: string, patch: Partial<StudentExt>) => void;
   removeStudent: (id: string) => void;
   setRoutine: (studentId: string, weeks: RoutineWeek[]) => void;
+  setNutritionPlan: (studentId: string, plan: NutritionPlanData) => void;
   resetDemo: () => void;
 };
 
