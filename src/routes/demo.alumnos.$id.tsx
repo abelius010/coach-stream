@@ -67,9 +67,13 @@ function StudentDetail() {
   const nutrition = useDemoStore((s) => s.nutritionPlans[id]);
   const reviewsRaw = useDemoStore((s) => s.reviews[id]); const reviews = reviewsRaw ?? [];
   const habitsConfigured = useDemoStore((s) => s.habitsConfigured[id]);
+  const role = useDemoStore((s) => s.role);
+  const removeStudent = useDemoStore((s) => s.removeStudent);
+  const navigate = useNavigate();
 
   const [tab, setTab] = useState<TabId>("resumen");
   const [editing, setEditing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [toasts, setToasts] = useState<ToastData[]>([]);
   const [workoutDeleted, setWorkoutDeleted] = useState(false);
   const [nutritionDeleted, setNutritionDeleted] = useState(false);
