@@ -65,6 +65,32 @@ export const useDemoStore = create<State>()(
   persist(
     (set, get) => ({
       students: seedStudents as StudentExt[],
+      role: "coach" as DemoRole,
+      workoutTemplates: [
+        { id: "wt-fullbody-3d", name: "Full Body 3 días", createdAt: "hace 2 sem", summary: "Rutina base para principiantes · 3 sesiones/semana" },
+        { id: "wt-ppl-5d", name: "Push · Pull · Legs (5 días)", createdAt: "hace 1 mes", summary: "Split clásico para intermedios · foco hipertrofia" },
+        { id: "wt-upper-lower", name: "Upper / Lower 4 días", createdAt: "hace 3 días", summary: "Volumen equilibrado · 4 sesiones/semana" },
+      ],
+      nutritionTemplates: [
+        { id: "nt-deficit-1800", name: "Déficit moderado 1.800 kcal", createdAt: "hace 1 sem", summary: "40/30/30 · pérdida de grasa controlada" },
+        { id: "nt-maint-2400", name: "Mantenimiento 2.400 kcal", createdAt: "hace 2 sem", summary: "Balance macros para recomposición" },
+        { id: "nt-bulk-2900", name: "Volumen limpio 2.900 kcal", createdAt: "hace 1 mes", summary: "Superávit ligero · alta proteína" },
+      ],
+      setRole: (r) => set({ role: r }),
+      addWorkoutTemplate: (t) =>
+        set({
+          workoutTemplates: [
+            { id: `wt-${Date.now()}`, createdAt: "ahora", ...t },
+            ...get().workoutTemplates,
+          ],
+        }),
+      addNutritionTemplate: (t) =>
+        set({
+          nutritionTemplates: [
+            { id: `nt-${Date.now()}`, createdAt: "ahora", ...t },
+            ...get().nutritionTemplates,
+          ],
+        }),
       addStudent: (input) => {
         const state = get();
         const base = slug(`${input.name} ${input.lastName ?? ""}`.trim());
