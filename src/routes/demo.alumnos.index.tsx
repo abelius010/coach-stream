@@ -184,7 +184,12 @@ function AlumnosList() {
                     </div>
                   </Link>
                   {role === "coach" && (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <div
+                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                      onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                      onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                      onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
+                    >
                       <ActionMenu items={menuItems} alwaysVisible label={`Acciones de ${s.name}`} />
                     </div>
                   )}
