@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import { Check, CreditCard, Bell, Shield, User, Building2, Sparkles } from "lucide-react";
 import { useMode, getAccountProfile, planLabel, getPlanLimit } from "../lib/fitflow-mode";
 import { useDemoStore } from "../lib/demo-store";
-import { ToastStack, useToasts } from "../components/demo/Toast";
+import { ToastStack, type ToastData } from "../components/demo/Toast";
 
 export const Route = createFileRoute("/demo/configuracion")({
   head: () => ({
