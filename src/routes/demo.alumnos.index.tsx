@@ -110,70 +110,40 @@ function AlumnosList() {
           </div>
         ) : (
           <ul className="divide-y divide-border">
-            {filtered.map((s) => {
-              const menuItems: ActionItem[] = [
-                {
-                  icon: <Eye className="h-3.5 w-3.5" />,
-                  label: "Ver alumno",
-                  onClick: () => navigate({ to: "/demo/alumnos/$id", params: { id: s.id } }),
-                },
-                {
-                  icon: <Pencil className="h-3.5 w-3.5" />,
-                  label: "Editar alumno",
-                  onClick: () => setToEdit(s),
-                },
-                {
-                  icon: <Trash2 className="h-3.5 w-3.5" />,
-                  label: "Eliminar alumno",
-                  onClick: () => setToDelete(s),
-                  danger: true,
-                },
-              ];
-              return (
-                <li key={s.id} className="group relative">
-                  <Link
-                    to="/demo/alumnos/$id"
-                    params={{ id: s.id }}
-                    className={`grid grid-cols-2 items-center gap-4 px-5 py-3 hover:bg-surface/50 md:grid-cols-12 ${role === "coach" ? "pr-14" : ""}`}
-                  >
-                    <div className="col-span-2 flex items-center gap-3 md:col-span-4">
-                      <img src={s.avatar} alt="" className="h-10 w-10 rounded-full object-cover" />
-                      <div className="min-w-0">
-                        <div className="truncate text-sm font-medium">{s.name}</div>
-                        <div className="truncate text-xs text-ink-muted md:hidden">{s.goal}</div>
-                      </div>
+            {filtered.map((s) => (
+              <li key={s.id}>
+                <Link
+                  to="/demo/alumnos/$id"
+                  params={{ id: s.id }}
+                  className="grid grid-cols-2 items-center gap-4 px-5 py-3 hover:bg-surface/50 md:grid-cols-12"
+                >
+                  <div className="col-span-2 flex items-center gap-3 md:col-span-4">
+                    <img src={s.avatar} alt="" className="h-10 w-10 rounded-full object-cover" />
+                    <div className="min-w-0">
+                      <div className="truncate text-sm font-medium">{s.name}</div>
+                      <div className="truncate text-xs text-ink-muted md:hidden">{s.goal}</div>
                     </div>
-                    <div className="hidden text-sm text-ink-muted md:col-span-2 md:block">{s.goal}</div>
-                    <div className="hidden text-right text-sm md:col-span-1 md:block">{s.weight} kg</div>
-                    <div className="col-span-1 md:col-span-2">
-                      <span className={`inline-flex rounded-md px-2 py-0.5 text-[11px] font-medium ${statusStyle[s.status]}`}>
-                        {statusLabel[s.status]}
-                      </span>
+                  </div>
+                  <div className="hidden text-sm text-ink-muted md:col-span-2 md:block">{s.goal}</div>
+                  <div className="hidden text-right text-sm md:col-span-1 md:block">{s.weight} kg</div>
+                  <div className="col-span-1 md:col-span-2">
+                    <span className={`inline-flex rounded-md px-2 py-0.5 text-[11px] font-medium ${statusStyle[s.status]}`}>
+                      {statusLabel[s.status]}
+                    </span>
+                  </div>
+                  <div className="hidden text-sm text-ink-muted md:col-span-2 md:block">{s.lastActive}</div>
+                  <div className="col-span-1 text-right">
+                    <div className="text-sm font-semibold">{s.compliance}%</div>
+                    <div className="mt-1 h-1 w-14 overflow-hidden rounded-full bg-surface md:ml-auto">
+                      <div
+                        className={`h-full ${s.compliance >= 85 ? "bg-emerald-500" : s.compliance >= 65 ? "bg-amber-500" : "bg-rose-500"}`}
+                        style={{ width: `${s.compliance}%` }}
+                      />
                     </div>
-                    <div className="hidden text-sm text-ink-muted md:col-span-2 md:block">{s.lastActive}</div>
-                    <div className="col-span-1 text-right">
-                      <div className="text-sm font-semibold">{s.compliance}%</div>
-                      <div className="mt-1 h-1 w-14 overflow-hidden rounded-full bg-surface md:ml-auto">
-                        <div
-                          className={`h-full ${s.compliance >= 85 ? "bg-emerald-500" : s.compliance >= 65 ? "bg-amber-500" : "bg-rose-500"}`}
-                          style={{ width: `${s.compliance}%` }}
-                        />
-                      </div>
-                    </div>
-                  </Link>
-                  {role === "coach" && (
-                    <div
-                      className="absolute right-3 top-1/2 -translate-y-1/2"
-                      onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}
-                      onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
-                      onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); }}
-                    >
-                      <ActionMenu items={menuItems} alwaysVisible label={`Acciones de ${s.name}`} />
-                    </div>
-                  )}
-                </li>
-              );
-            })}
+                  </div>
+                </Link>
+              </li>
+            ))}
           </ul>
         )}
       </div>
