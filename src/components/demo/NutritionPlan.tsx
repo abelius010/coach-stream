@@ -1,8 +1,10 @@
 import { useMemo, useState } from "react";
-import { Pencil, Plus, Trash2, ArrowUp, ArrowDown, Copy, X, Save } from "lucide-react";
+import { Pencil, Plus, Trash2, ArrowUp, ArrowDown, Copy, X, Save, Utensils } from "lucide-react";
 import {
   useDemoStore,
   seedNutritionPlan,
+  starterNutritionPlan,
+  isNewStudent,
   genId,
   type NutritionPlanData,
   type NutritionMeal,
@@ -21,14 +23,19 @@ export function NutritionPlan({
 }) {
   const role = useDemoStore((s) => s.role);
   const stored = useDemoStore((s) => s.nutritionPlans?.[studentId]);
+  const student = useDemoStore((s) => s.students.find((x) => x.id === studentId));
   const setPlan = useDemoStore((s) => s.setNutritionPlan);
+  const isNew = isNewStudent(student);
 
-  const plan = useMemo<NutritionPlanData>(() => stored ?? seedNutritionPlan(), [stored]);
+  const plan = useMemo<NutritionPlanData | null>(
+    () => stored ?? (isNew ? null : seedNutritionPlan()),
+    [stored, isNew],
+  );
   const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState<NutritionPlanData>(plan);
+  const [draft, setDraft] = useState<NutritionPlanData>(plan ?? starterNutritionPlan());
 
   const startEdit = () => {
-    setDraft(structuredClone(plan));
+    setDraft(structuredClone(plan ?? starterNutritionPlan()));
     setEditing(true);
   };
   const cancel = () => setEditing(false);
@@ -37,15 +44,46 @@ export function NutritionPlan({
     setEditing(false);
     onToast("Plan nutricional actualizado correctamente.");
   };
+  const createPlan = () => {
+    const init = starterNutritionPlan();
+    setPlan(studentId, init);
+    setDraft(structuredClone(init));
+    setEditing(true);
+  };
+
+  if (!editing && !plan) {
+    return (
+      <section className="rounded-2xl border border-dashed border-border bg-surface/30 p-10 text-center">
+        <div className="mx-auto grid h-11 w-11 place-items-center rounded-xl bg-background shadow-sm">
+          <Utensils className="h-5 w-5 text-ink-muted" />
+        </div>
+        <h4 className="mt-3 text-sm font-semibold">Todavía no hay ningún plan nutricional asignado</h4>
+        <p className="mx-auto mt-1 max-w-sm text-xs text-ink-muted">
+          Crea el primer plan para {student?.name.split(" ")[0] ?? "este alumno"} con sus comidas y
+          objetivos calóricos.
+        </p>
+        {role === "coach" && (
+          <button
+            onClick={createPlan}
+            className="mt-4 inline-flex h-9 items-center gap-1.5 rounded-lg bg-foreground px-3.5 text-sm font-medium text-background hover:opacity-90"
+          >
+            <Plus className="h-4 w-4" /> Crear plan nutricional
+          </button>
+        )}
+      </section>
+    );
+  }
+
+  const view = plan ?? draft;
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {[
-          { l: "Calorías", v: `${plan.targets.kcal} kcal` },
-          { l: "Proteína", v: `${plan.targets.protein} g` },
-          { l: "Carbohidratos", v: `${plan.targets.carbs} g` },
-          { l: "Grasas", v: `${plan.targets.fat} g` },
+          { l: "Calorías", v: `${view.targets.kcal} kcal` },
+          { l: "Proteína", v: `${view.targets.protein} g` },
+          { l: "Carbohidratos", v: `${view.targets.carbs} g` },
+          { l: "Grasas", v: `${view.targets.fat} g` },
         ].map((m) => (
           <div key={m.l} className="rounded-xl border border-border bg-background p-4">
             <div className="text-xs text-ink-muted">{m.l}</div>
@@ -61,7 +99,7 @@ export function NutritionPlan({
             <p className="text-xs text-ink-muted">
               {editing
                 ? "Modo edición · los cambios se guardan al pulsar Guardar."
-                : `${plan.meals.length} ${plan.meals.length === 1 ? "comida" : "comidas"} planificadas`}
+                : `${view.meals.length} ${view.meals.length === 1 ? "comida" : "comidas"} planificadas`}
             </p>
           </div>
           {role === "coach" && !editing && (
@@ -94,15 +132,17 @@ export function NutritionPlan({
           {editing ? (
             <NutritionEditor draft={draft} setDraft={setDraft} />
           ) : (
-            <NutritionView meals={plan.meals} />
+            <NutritionView meals={view.meals} />
           )}
         </div>
       </section>
 
-      <div className="rounded-2xl border border-border bg-brand-muted/40 p-4 text-sm">
-        <div className="text-xs font-medium uppercase tracking-wide text-brand">Nota del entrenador</div>
-        <p className="mt-1 text-foreground">{plan.coachNote}</p>
-      </div>
+      {view.coachNote && (
+        <div className="rounded-2xl border border-border bg-brand-muted/40 p-4 text-sm">
+          <div className="text-xs font-medium uppercase tracking-wide text-brand">Nota del entrenador</div>
+          <p className="mt-1 text-foreground">{view.coachNote}</p>
+        </div>
+      )}
     </div>
   );
 }
