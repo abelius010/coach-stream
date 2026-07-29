@@ -1,4 +1,4 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   ArrowLeft,
@@ -13,9 +13,10 @@ import {
   Check,
   Circle,
   Send,
+  Pencil,
 } from "lucide-react";
 import {
-  students,
+  students as seedStudents,
   workoutWeeks,
   nutritionPlan,
   weightSeries,
@@ -24,13 +25,11 @@ import {
   gallery,
   chatMessages,
 } from "../lib/demo-data";
+import { useDemoStore } from "../lib/demo-store";
+import { EditStudentSheet } from "../components/demo/EditStudentSheet";
 
 export const Route = createFileRoute("/demo/alumnos/$id")({
-  loader: ({ params }) => {
-    const s = students.find((x) => x.id === params.id);
-    if (!s) throw notFound();
-    return { student: s };
-  },
+  loader: ({ params }) => ({ id: params.id }),
   component: StudentDetail,
 });
 
@@ -47,7 +46,21 @@ const tabs = [
 type TabId = (typeof tabs)[number]["id"];
 
 function StudentDetail() {
-  const { student } = Route.useLoaderData();
+  const { id } = Route.useLoaderData();
+  const student = useDemoStore((s) => s.students.find((x) => x.id === id));
+  const [tab, setTab] = useState<TabId>("resumen");
+  const [editing, setEditing] = useState(false);
+
+  if (!student) {
+    return (
+      <div className="mx-auto max-w-3xl p-8 text-center">
+        <h1 className="text-xl font-semibold">Alumno no encontrado</h1>
+        <p className="mt-2 text-sm text-ink-muted">Puede que hayas restablecido la demo.</p>
+        <Link to="/demo/alumnos" className="mt-4 inline-flex rounded-lg bg-foreground px-4 py-2 text-sm text-background">Volver a alumnos</Link>
+      </div>
+    );
+  }
+
   const [tab, setTab] = useState<TabId>("resumen");
 
   return (
