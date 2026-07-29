@@ -125,6 +125,33 @@ export type HabitLog = {
   updatedAt?: string;
 };
 
+export type NutritionDaySnapshot = {
+  date: string;
+  closedAt: string;
+  progress: NutritionProgress;
+  extras: ExtraMeal[];
+  habits: HabitLog;
+};
+
+export const todayKey = (): string => {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
+export const formatDateKey = (key: string): string => {
+  const [y, m, d] = key.split("-").map(Number);
+  const date = new Date(y, (m ?? 1) - 1, d ?? 1);
+  const s = date.toLocaleDateString("es-ES", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+  return s.charAt(0).toUpperCase() + s.slice(1);
+};
+
 export const parseSetsCount = (sets: string): number => {
   const n = parseInt(sets, 10);
   return Number.isFinite(n) && n > 0 ? Math.min(n, 12) : 1;
