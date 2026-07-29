@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet, Link, useRouterState } from "@tanstack/react-router";
+import { DemoBanner } from "@/components/demo/DemoBanner";
 import {
   LayoutDashboard,
   Users,

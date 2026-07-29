@@ -137,6 +137,7 @@ function StudentDetail() {
         {tab === "multimedia" && <MultimediaTab />}
         {tab === "chat" && <ChatTab />}
       </div>
+      <EditStudentSheet student={student} open={editing} onClose={() => setEditing(false)} />
     </div>
   );
 }
@@ -164,7 +165,7 @@ function Card({ title, subtitle, children }: { title: string; subtitle?: string;
 
 /* ---------- Tabs ---------- */
 
-function ResumenTab({ student }: { student: (typeof students)[number] }) {
+function ResumenTab({ student }: { student: (typeof seedStudents)[number] }) {
   const progress = ((student.weightStart - student.weight) / (student.weightStart - student.weightGoal)) * 100;
   return (
     <div className="grid gap-4 lg:grid-cols-3">
