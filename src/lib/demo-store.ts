@@ -327,6 +327,8 @@ const createFitFlowStore = (persistName: string, seed: Seed) =>
         nutritionExtras: {},
         nutritionDayIndex: {},
         habitsLog: {},
+        nutritionHistory: {},
+        coachMealComments: {},
         setRole: (r) => set({ role: r }),
         addWorkoutTemplate: (t) =>
           set({
