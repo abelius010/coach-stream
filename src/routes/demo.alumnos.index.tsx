@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Filter, Plus, Search } from "lucide-react";
 import { useMemo, useState } from "react";
-import { useDemoStore } from "../lib/demo-store";
+import { useDemoStore, type StudentExt } from "../lib/demo-store";
 
 export const Route = createFileRoute("/demo/alumnos/")({
   component: AlumnosList,
