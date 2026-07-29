@@ -61,7 +61,11 @@ const steps = ["Datos personales", "Datos físicos", "Objetivo y experiencia", "
 
 function NuevoAlumno() {
   const navigate = useNavigate();
+  const mode = useMode();
+  const students = useDemoStore((s) => s.students);
   const addStudent = useDemoStore((s) => s.addStudent);
+  const planLimit = mode === "account" ? getPlanLimit(getAccountProfile()?.plan) : null;
+  const reachedLimit = planLimit !== null && students.length >= planLimit;
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<Draft>(() => {
     if (typeof window === "undefined") return empty;
@@ -159,6 +163,12 @@ function NuevoAlumno() {
       <Link to="/demo/alumnos" className="mb-4 inline-flex items-center gap-1.5 text-xs text-ink-muted hover:text-foreground">
         <ArrowLeft className="h-3.5 w-3.5" /> Volver a alumnos
       </Link>
+
+      {reachedLimit && (
+        <div className="mb-5">
+          <PlanLimitBanner limit={planLimit!} />
+        </div>
+      )}
 
       <div className="mb-6">
         <h1 className="text-2xl font-semibold tracking-tight">Nuevo alumno</h1>
