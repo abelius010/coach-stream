@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet, Link, useRouterState } from "@tanstack/react-router";
+import { DemoBanner } from "@/components/demo/DemoBanner";
 import {
   LayoutDashboard,
   Users,
@@ -123,6 +124,7 @@ function DemoLayout() {
           })}
         </nav>
         <main className="flex-1 bg-surface">
+          <DemoBanner />
           <Outlet />
         </main>
       </div>

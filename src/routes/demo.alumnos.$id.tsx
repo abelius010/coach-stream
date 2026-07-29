@@ -1,4 +1,4 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import {
   ArrowLeft,
@@ -13,9 +13,10 @@ import {
   Check,
   Circle,
   Send,
+  Pencil,
 } from "lucide-react";
 import {
-  students,
+  students as seedStudents,
   workoutWeeks,
   nutritionPlan,
   weightSeries,
@@ -24,13 +25,11 @@ import {
   gallery,
   chatMessages,
 } from "../lib/demo-data";
+import { useDemoStore } from "../lib/demo-store";
+import { EditStudentSheet } from "../components/demo/EditStudentSheet";
 
 export const Route = createFileRoute("/demo/alumnos/$id")({
-  loader: ({ params }) => {
-    const s = students.find((x) => x.id === params.id);
-    if (!s) throw notFound();
-    return { student: s };
-  },
+  loader: ({ params }) => ({ id: params.id }),
   component: StudentDetail,
 });
 
@@ -47,8 +46,23 @@ const tabs = [
 type TabId = (typeof tabs)[number]["id"];
 
 function StudentDetail() {
-  const { student } = Route.useLoaderData();
+  const { id } = Route.useLoaderData();
+  const student = useDemoStore((s) => s.students.find((x) => x.id === id));
   const [tab, setTab] = useState<TabId>("resumen");
+  const [editing, setEditing] = useState(false);
+
+  if (!student) {
+    return (
+      <div className="mx-auto max-w-3xl p-8 text-center">
+        <h1 className="text-xl font-semibold">Alumno no encontrado</h1>
+        <p className="mt-2 text-sm text-ink-muted">Puede que hayas restablecido la demo.</p>
+        <Link to="/demo/alumnos" className="mt-4 inline-flex rounded-lg bg-foreground px-4 py-2 text-sm text-background">Volver a alumnos</Link>
+      </div>
+    );
+  }
+
+
+
 
   return (
     <div className="mx-auto max-w-7xl p-4 md:p-8">
@@ -63,7 +77,9 @@ function StudentDetail() {
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-xl font-semibold md:text-2xl">{student.name}</h1>
-              <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">Activo</span>
+              <span className="rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
+                {student.status === "activo" ? "Activo" : student.status === "atencion" ? "Atención" : "En riesgo"}
+              </span>
             </div>
             <div className="mt-1 text-sm text-ink-muted">
               {student.goal} · {student.age} años · {student.height} cm · Desde {student.startDate}
@@ -75,6 +91,11 @@ function StudentDetail() {
               <Stat label="Cumplimiento" value={`${student.compliance}%`} />
               <Stat label="Plan" value={student.plan} />
             </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setEditing(true)} className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-sm hover:bg-surface">
+              <Pencil className="h-3.5 w-3.5" /> Editar alumno
+            </button>
           </div>
           <div className="flex items-center gap-2">
             <button className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-sm hover:bg-surface">
@@ -116,6 +137,7 @@ function StudentDetail() {
         {tab === "multimedia" && <MultimediaTab />}
         {tab === "chat" && <ChatTab />}
       </div>
+      <EditStudentSheet student={student} open={editing} onClose={() => setEditing(false)} />
     </div>
   );
 }
@@ -143,7 +165,7 @@ function Card({ title, subtitle, children }: { title: string; subtitle?: string;
 
 /* ---------- Tabs ---------- */
 
-function ResumenTab({ student }: { student: (typeof students)[number] }) {
+function ResumenTab({ student }: { student: (typeof seedStudents)[number] }) {
   const progress = ((student.weightStart - student.weight) / (student.weightStart - student.weightGoal)) * 100;
   return (
     <div className="grid gap-4 lg:grid-cols-3">
