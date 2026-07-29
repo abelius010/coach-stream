@@ -8,30 +8,73 @@ import {
   Bell,
   Search,
   Settings,
-  LogOut,
   Dumbbell,
 } from "lucide-react";
+import {
+  useMode,
+  getAccountProfile,
+  displayName,
+  initials,
+  setMode,
+} from "../lib/fitflow-mode";
+import { useDemoStore } from "../lib/demo-store";
 
 export const Route = createFileRoute("/demo")({
   head: () => ({
     meta: [
-      { title: "FitFlow · Demo interactiva" },
-      { name: "description", content: "Explora FitFlow como si ya llevaras meses usándolo." },
+      { title: "FitFlow · Panel del entrenador" },
+      { name: "description", content: "Panel de gestión de alumnos, entrenamientos y nutrición." },
       { name: "robots", content: "noindex" },
     ],
   }),
   component: DemoLayout,
 });
 
-const nav = [
-  { to: "/demo", label: "Inicio", icon: LayoutDashboard, exact: true },
-  { to: "/demo/alumnos", label: "Alumnos", icon: Users },
-  { to: "/demo/bandeja", label: "Tu trabajo de hoy", icon: Inbox, badge: 8 },
-  { to: "/demo/chat", label: "Mensajes", icon: MessageSquare, badge: 4 },
-];
+type NavItem = {
+  to: "/demo" | "/demo/alumnos" | "/demo/bandeja" | "/demo/chat";
+  label: string;
+  icon: typeof LayoutDashboard;
+  exact?: boolean;
+  badge?: number;
+};
 
 function DemoLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const mode = useMode();
+  const isDemo = mode === "demo";
+  const students = useDemoStore((s) => s.students);
+  const messagesMap = useDemoStore((s) => s.messages);
+  const pendingMessages = Object.values(messagesMap).reduce((n, list) => n + list.length, 0);
+  const profile = getAccountProfile();
+
+  const nav: NavItem[] = [
+    { to: "/demo", label: "Inicio", icon: LayoutDashboard, exact: true },
+    { to: "/demo/alumnos", label: "Alumnos", icon: Users },
+    {
+      to: "/demo/bandeja",
+      label: "Tu trabajo de hoy",
+      icon: Inbox,
+      badge: isDemo ? 8 : undefined,
+    },
+    {
+      to: "/demo/chat",
+      label: "Mensajes",
+      icon: MessageSquare,
+      badge: isDemo ? 4 : pendingMessages || undefined,
+    },
+  ];
+
+  const coachName = isDemo ? "Carlos Ruiz" : displayName(profile);
+  const coachSub = isDemo ? "Coach · Plan Pro" : profile?.businessName || "Cuenta nueva";
+  const coachInitials = isDemo ? "CR" : initials(profile);
+
+  const exitToLanding = () => {
+    if (typeof window !== "undefined") {
+      // Reset mode to demo default when leaving so landing behaves as expected.
+      setMode("demo");
+      window.location.href = "/";
+    }
+  };
 
   return (
     <div className="flex min-h-screen w-full bg-surface">
@@ -42,7 +85,15 @@ function DemoLayout() {
             <Dumbbell className="h-4 w-4" />
           </div>
           <div className="text-sm font-semibold">FitFlow</div>
-          <span className="ml-auto rounded-md bg-brand-muted px-1.5 py-0.5 text-[10px] font-medium text-brand">DEMO</span>
+          {isDemo ? (
+            <span className="ml-auto rounded-md bg-brand-muted px-1.5 py-0.5 text-[10px] font-medium text-brand">
+              DEMO
+            </span>
+          ) : (
+            <span className="ml-auto rounded-md bg-surface px-1.5 py-0.5 text-[10px] font-medium text-ink-muted">
+              {profile?.plan ? profile.plan.toUpperCase() : "CUENTA"}
+            </span>
+          )}
         </div>
         <nav className="flex-1 space-y-0.5 p-2">
           {nav.map((item) => {
@@ -69,10 +120,16 @@ function DemoLayout() {
         </nav>
         <div className="border-t border-border p-3">
           <div className="flex items-center gap-2.5 rounded-lg px-2 py-1.5">
-            <img src="https://i.pravatar.cc/64?img=68" alt="" className="h-8 w-8 rounded-full object-cover" />
+            {isDemo ? (
+              <img src="https://i.pravatar.cc/64?img=68" alt="" className="h-8 w-8 rounded-full object-cover" />
+            ) : (
+              <div className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-foreground text-[11px] font-semibold text-background">
+                {coachInitials}
+              </div>
+            )}
             <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-medium">Carlos Ruiz</div>
-              <div className="truncate text-xs text-ink-muted">Coach · Plan Pro</div>
+              <div className="truncate text-sm font-medium">{coachName}</div>
+              <div className="truncate text-xs text-ink-muted">{coachSub}</div>
             </div>
             <button className="rounded-md p-1 text-ink-muted hover:bg-surface hover:text-foreground">
               <Settings className="h-4 w-4" />
@@ -87,21 +144,31 @@ function DemoLayout() {
           <div className="relative hidden max-w-md flex-1 md:block">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" />
             <input
-              placeholder="Buscar alumno, ejercicio, comida…"
+              placeholder={
+                students.length === 0
+                  ? "Aún no hay nada que buscar…"
+                  : "Buscar alumno, ejercicio, comida…"
+              }
               className="h-9 w-full rounded-lg border border-border bg-surface pl-9 pr-3 text-sm outline-none placeholder:text-ink-muted focus:border-foreground/20"
             />
           </div>
           <div className="ml-auto flex items-center gap-1">
-            <Link
-              to="/"
+            <button
+              onClick={exitToLanding}
               className="hidden rounded-md px-2.5 py-1.5 text-xs text-ink-muted hover:bg-surface hover:text-foreground md:inline-flex"
             >
-              Salir de la demo
-            </Link>
+              {isDemo ? "Salir de la demo" : "Cerrar sesión"}
+            </button>
             <button className="grid h-9 w-9 place-items-center rounded-lg text-ink-muted hover:bg-surface">
               <Bell className="h-4 w-4" />
             </button>
-            <img src="https://i.pravatar.cc/64?img=68" alt="" className="h-8 w-8 rounded-full object-cover md:hidden" />
+            {isDemo ? (
+              <img src="https://i.pravatar.cc/64?img=68" alt="" className="h-8 w-8 rounded-full object-cover md:hidden" />
+            ) : (
+              <div className="grid h-8 w-8 place-items-center rounded-full bg-foreground text-[11px] font-semibold text-background md:hidden">
+                {coachInitials}
+              </div>
+            )}
           </div>
         </header>
         {/* Mobile tabs */}
