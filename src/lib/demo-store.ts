@@ -125,6 +125,33 @@ export type HabitLog = {
   updatedAt?: string;
 };
 
+export type NutritionDaySnapshot = {
+  date: string;
+  closedAt: string;
+  progress: NutritionProgress;
+  extras: ExtraMeal[];
+  habits: HabitLog;
+};
+
+export const todayKey = (): string => {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
+export const formatDateKey = (key: string): string => {
+  const [y, m, d] = key.split("-").map(Number);
+  const date = new Date(y, (m ?? 1) - 1, d ?? 1);
+  const s = date.toLocaleDateString("es-ES", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  });
+  return s.charAt(0).toUpperCase() + s.slice(1);
+};
+
 export const parseSetsCount = (sets: string): number => {
   const n = parseInt(sets, 10);
   return Number.isFinite(n) && n > 0 ? Math.min(n, 12) : 1;
@@ -206,6 +233,8 @@ type State = {
   nutritionExtras: Record<string, ExtraMeal[]>;
   nutritionDayIndex: Record<string, number>;
   habitsLog: Record<string, HabitLog>;
+  nutritionHistory: Record<string, Record<string, NutritionDaySnapshot>>;
+  coachMealComments: Record<string, Record<string, Record<string, string>>>;
   setRole: (r: DemoRole) => void;
   addWorkoutTemplate: (t: Omit<WorkoutTemplate, "id" | "createdAt">) => void;
   addNutritionTemplate: (t: Omit<NutritionTemplate, "id" | "createdAt">) => void;
@@ -233,6 +262,7 @@ type State = {
   removeExtraMeal: (studentId: string, mealId: string) => void;
   finishNutritionDay: (studentId: string) => void;
   updateHabit: (studentId: string, patch: Partial<HabitLog>) => void;
+  setCoachMealComment: (studentId: string, dateKey: string, mealId: string, comment: string) => void;
   resetDemo: () => void;
 };
 
@@ -297,6 +327,8 @@ const createFitFlowStore = (persistName: string, seed: Seed) =>
         nutritionExtras: {},
         nutritionDayIndex: {},
         habitsLog: {},
+        nutritionHistory: {},
+        coachMealComments: {},
         setRole: (r) => set({ role: r }),
         addWorkoutTemplate: (t) =>
           set({
@@ -376,6 +408,8 @@ const createFitFlowStore = (persistName: string, seed: Seed) =>
             nutritionExtras: omit(s.nutritionExtras),
             nutritionDayIndex: omit(s.nutritionDayIndex),
             habitsLog: omit(s.habitsLog),
+            nutritionHistory: omit(s.nutritionHistory),
+            coachMealComments: omit(s.coachMealComments),
           });
         },
         setRoutine: (studentId, weeks) =>
@@ -603,11 +637,30 @@ const createFitFlowStore = (persistName: string, seed: Seed) =>
         finishNutritionDay: (studentId) => {
           const state = get();
           const idx = (state.nutritionDayIndex[studentId] ?? 1) + 1;
+          const dateKey = todayKey();
+          const progress = state.nutritionProgress[studentId] ?? {};
+          const extras = state.nutritionExtras[studentId] ?? [];
+          const habits = state.habitsLog[studentId] ?? {};
+          const hasAny =
+            Object.keys(progress).length > 0 ||
+            extras.length > 0 ||
+            Object.keys(habits).length > 0;
+          const historyForStudent = { ...(state.nutritionHistory[studentId] ?? {}) };
+          if (hasAny) {
+            historyForStudent[dateKey] = {
+              date: dateKey,
+              closedAt: new Date().toISOString(),
+              progress,
+              extras,
+              habits,
+            };
+          }
           set({
             nutritionProgress: { ...state.nutritionProgress, [studentId]: {} },
             nutritionExtras: { ...state.nutritionExtras, [studentId]: [] },
             habitsLog: { ...state.habitsLog, [studentId]: {} },
             nutritionDayIndex: { ...state.nutritionDayIndex, [studentId]: idx },
+            nutritionHistory: { ...state.nutritionHistory, [studentId]: historyForStudent },
           });
         },
         updateHabit: (studentId, patch) => {
@@ -618,6 +671,20 @@ const createFitFlowStore = (persistName: string, seed: Seed) =>
               ...state.habitsLog,
               [studentId]: { ...current, ...patch, updatedAt: new Date().toISOString() },
             },
+          });
+        },
+        setCoachMealComment: (studentId, dateKey, mealId, comment) => {
+          const state = get();
+          const forStudent = { ...(state.coachMealComments[studentId] ?? {}) };
+          const forDate = { ...(forStudent[dateKey] ?? {}) };
+          if (comment.trim()) {
+            forDate[mealId] = comment;
+          } else {
+            delete forDate[mealId];
+          }
+          forStudent[dateKey] = forDate;
+          set({
+            coachMealComments: { ...state.coachMealComments, [studentId]: forStudent },
           });
         },
         resetDemo: () =>
@@ -637,6 +704,8 @@ const createFitFlowStore = (persistName: string, seed: Seed) =>
             nutritionExtras: {},
             nutritionDayIndex: {},
             habitsLog: {},
+            nutritionHistory: {},
+            coachMealComments: {},
           }),
       }),
       {

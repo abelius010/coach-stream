@@ -39,7 +39,7 @@ import { ActionMenu, type ActionItem } from "../components/demo/ActionMenu";
 import { DeleteStudentDialog } from "../components/demo/DeleteStudentDialog";
 import { ToastStack, type ToastData } from "../components/demo/Toast";
 import { WorkoutRoutine } from "../components/demo/WorkoutRoutine";
-import { NutritionPlan } from "../components/demo/NutritionPlan";
+import { NutritionTab } from "../components/demo/NutritionTab";
 import { Modal, ModalButton } from "../components/demo/Modal";
 import { Field, inputCls, textareaCls } from "../components/demo/Field";
 
@@ -237,7 +237,7 @@ function StudentDetail() {
             {nutritionDeleted ? (
               <EmptyDeletedState kind="nutrition" />
             ) : (
-              <NutritionPlan studentId={student.id} onToast={pushToast} />
+              <NutritionTab studentId={student.id} onToast={pushToast} />
             )}
           </TabShell>
         )}
