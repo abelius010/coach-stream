@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import {
   Check,
   Circle,
+  Dumbbell,
   Pencil,
   Plus,
   Trash2,
@@ -14,10 +15,10 @@ import {
 import {
   useDemoStore,
   seedRoutine,
+  starterRoutine,
+  isNewStudent,
   genId,
   type RoutineWeek,
-  type RoutineDay,
-  type RoutineExercise,
 } from "../../lib/demo-store";
 import { Modal, ModalButton } from "./Modal";
 
@@ -30,9 +31,14 @@ export function WorkoutRoutine({
 }) {
   const role = useDemoStore((s) => s.role);
   const stored = useDemoStore((s) => s.routines?.[studentId]);
+  const student = useDemoStore((s) => s.students.find((x) => x.id === studentId));
   const setRoutine = useDemoStore((s) => s.setRoutine);
+  const isNew = isNewStudent(student);
 
-  const weeks = useMemo<RoutineWeek[]>(() => stored ?? seedRoutine(), [stored]);
+  const weeks = useMemo<RoutineWeek[]>(
+    () => stored ?? (isNew ? [] : seedRoutine()),
+    [stored, isNew],
+  );
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<RoutineWeek[]>(weeks);
 
@@ -46,6 +52,36 @@ export function WorkoutRoutine({
     setEditing(false);
     onToast("Rutina actualizada correctamente.");
   };
+  const createRoutine = () => {
+    const init = starterRoutine();
+    setRoutine(studentId, init);
+    setDraft(structuredClone(init));
+    setEditing(true);
+  };
+
+  // Empty state for new students without a routine
+  if (!editing && weeks.length === 0) {
+    return (
+      <section className="rounded-2xl border border-dashed border-border bg-surface/30 p-10 text-center">
+        <div className="mx-auto grid h-11 w-11 place-items-center rounded-xl bg-background shadow-sm">
+          <Dumbbell className="h-5 w-5 text-ink-muted" />
+        </div>
+        <h4 className="mt-3 text-sm font-semibold">Todavía no hay ninguna rutina asignada</h4>
+        <p className="mx-auto mt-1 max-w-sm text-xs text-ink-muted">
+          Crea la primera rutina para {student?.name.split(" ")[0] ?? "este alumno"} y comienza a
+          planificar sus semanas de entrenamiento.
+        </p>
+        {role === "coach" && (
+          <button
+            onClick={createRoutine}
+            className="mt-4 inline-flex h-9 items-center gap-1.5 rounded-lg bg-foreground px-3.5 text-sm font-medium text-background hover:opacity-90"
+          >
+            <Plus className="h-4 w-4" /> Crear rutina
+          </button>
+        )}
+      </section>
+    );
+  }
 
   return (
     <section className="rounded-2xl border border-border bg-background">
