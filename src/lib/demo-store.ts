@@ -107,6 +107,24 @@ export type MealLog = {
 // Keyed by mealId (plan-level) so the same plan meal aggregates today's log.
 export type NutritionProgress = Record<string, MealLog>;
 
+export type ExtraMeal = {
+  id: string;
+  name: string;
+  time: string;
+  photo?: string | null;
+  note?: string;
+  createdAt: string;
+};
+
+export type HabitLog = {
+  waterMl?: number;
+  sleepHours?: number;
+  sleepMinutes?: number;
+  steps?: number;
+  weight?: number;
+  updatedAt?: string;
+};
+
 export const parseSetsCount = (sets: string): number => {
   const n = parseInt(sets, 10);
   return Number.isFinite(n) && n > 0 ? Math.min(n, 12) : 1;
