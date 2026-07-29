@@ -107,6 +107,24 @@ export type MealLog = {
 // Keyed by mealId (plan-level) so the same plan meal aggregates today's log.
 export type NutritionProgress = Record<string, MealLog>;
 
+export type ExtraMeal = {
+  id: string;
+  name: string;
+  time: string;
+  photo?: string | null;
+  note?: string;
+  createdAt: string;
+};
+
+export type HabitLog = {
+  waterMl?: number;
+  sleepHours?: number;
+  sleepMinutes?: number;
+  steps?: number;
+  weight?: number;
+  updatedAt?: string;
+};
+
 export const parseSetsCount = (sets: string): number => {
   const n = parseInt(sets, 10);
   return Number.isFinite(n) && n > 0 ? Math.min(n, 12) : 1;
@@ -185,6 +203,9 @@ type State = {
   messages: Record<string, ChatMsg[]>;
   workoutProgress: Record<string, WorkoutProgress>;
   nutritionProgress: Record<string, NutritionProgress>;
+  nutritionExtras: Record<string, ExtraMeal[]>;
+  nutritionDayIndex: Record<string, number>;
+  habitsLog: Record<string, HabitLog>;
   setRole: (r: DemoRole) => void;
   addWorkoutTemplate: (t: Omit<WorkoutTemplate, "id" | "createdAt">) => void;
   addNutritionTemplate: (t: Omit<NutritionTemplate, "id" | "createdAt">) => void;
@@ -207,6 +228,11 @@ type State = {
   setMealPhoto: (studentId: string, mealId: string, photo: string | null) => void;
   toggleMealDone: (studentId: string, mealId: string) => void;
   setMealNote: (studentId: string, mealId: string, note: string) => void;
+  addExtraMeal: (studentId: string, meal: Omit<ExtraMeal, "id" | "createdAt">) => void;
+  updateExtraMeal: (studentId: string, mealId: string, patch: Partial<ExtraMeal>) => void;
+  removeExtraMeal: (studentId: string, mealId: string) => void;
+  finishNutritionDay: (studentId: string) => void;
+  updateHabit: (studentId: string, patch: Partial<HabitLog>) => void;
   resetDemo: () => void;
 };
 
@@ -268,6 +294,9 @@ const createFitFlowStore = (persistName: string, seed: Seed) =>
         messages: {},
         workoutProgress: {},
         nutritionProgress: {},
+        nutritionExtras: {},
+        nutritionDayIndex: {},
+        habitsLog: {},
         setRole: (r) => set({ role: r }),
         addWorkoutTemplate: (t) =>
           set({
@@ -344,6 +373,9 @@ const createFitFlowStore = (persistName: string, seed: Seed) =>
             messages: omit(s.messages),
             workoutProgress: omit(s.workoutProgress),
             nutritionProgress: omit(s.nutritionProgress),
+            nutritionExtras: omit(s.nutritionExtras),
+            nutritionDayIndex: omit(s.nutritionDayIndex),
+            habitsLog: omit(s.habitsLog),
           });
         },
         setRoutine: (studentId, weeks) =>
@@ -544,6 +576,50 @@ const createFitFlowStore = (persistName: string, seed: Seed) =>
             },
           });
         },
+        addExtraMeal: (studentId, meal) => {
+          const state = get();
+          const list = state.nutritionExtras[studentId] ?? [];
+          const extra: ExtraMeal = {
+            id: genId("xmeal"),
+            createdAt: new Date().toISOString(),
+            ...meal,
+          };
+          set({
+            nutritionExtras: { ...state.nutritionExtras, [studentId]: [...list, extra] },
+          });
+        },
+        updateExtraMeal: (studentId, mealId, patch) => {
+          const state = get();
+          const list = (state.nutritionExtras[studentId] ?? []).map((m) =>
+            m.id === mealId ? { ...m, ...patch } : m,
+          );
+          set({ nutritionExtras: { ...state.nutritionExtras, [studentId]: list } });
+        },
+        removeExtraMeal: (studentId, mealId) => {
+          const state = get();
+          const list = (state.nutritionExtras[studentId] ?? []).filter((m) => m.id !== mealId);
+          set({ nutritionExtras: { ...state.nutritionExtras, [studentId]: list } });
+        },
+        finishNutritionDay: (studentId) => {
+          const state = get();
+          const idx = (state.nutritionDayIndex[studentId] ?? 1) + 1;
+          set({
+            nutritionProgress: { ...state.nutritionProgress, [studentId]: {} },
+            nutritionExtras: { ...state.nutritionExtras, [studentId]: [] },
+            habitsLog: { ...state.habitsLog, [studentId]: {} },
+            nutritionDayIndex: { ...state.nutritionDayIndex, [studentId]: idx },
+          });
+        },
+        updateHabit: (studentId, patch) => {
+          const state = get();
+          const current = state.habitsLog[studentId] ?? {};
+          set({
+            habitsLog: {
+              ...state.habitsLog,
+              [studentId]: { ...current, ...patch, updatedAt: new Date().toISOString() },
+            },
+          });
+        },
         resetDemo: () =>
           set({
             students: seed.students,
@@ -558,6 +634,9 @@ const createFitFlowStore = (persistName: string, seed: Seed) =>
             messages: {},
             workoutProgress: {},
             nutritionProgress: {},
+            nutritionExtras: {},
+            nutritionDayIndex: {},
+            habitsLog: {},
           }),
       }),
       {
