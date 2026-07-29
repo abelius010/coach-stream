@@ -13,13 +13,20 @@ export const Route = createFileRoute("/alumno")({
   component: AlumnoLayout,
 });
 
-const nav = [
+type NavItem = {
+  to: "/alumno" | "/alumno/entrenamiento" | "/alumno/nutricion" | "/alumno/chat" | "/alumno/perfil";
+  label: string;
+  icon: typeof Home;
+  exact?: boolean;
+};
+
+const nav: NavItem[] = [
   { to: "/alumno", label: "Inicio", icon: Home, exact: true },
   { to: "/alumno/entrenamiento", label: "Entreno", icon: Dumbbell },
   { to: "/alumno/nutricion", label: "Nutrición", icon: Salad },
   { to: "/alumno/chat", label: "Chat", icon: MessageCircle },
   { to: "/alumno/perfil", label: "Perfil", icon: User },
-] as const;
+];
 
 function AlumnoLayout() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });

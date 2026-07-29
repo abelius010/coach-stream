@@ -11,11 +11,17 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RegistroRouteImport } from './routes/registro'
 import { Route as DemoRouteImport } from './routes/demo'
+import { Route as AlumnoRouteImport } from './routes/alumno'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DemoIndexRouteImport } from './routes/demo.index'
+import { Route as AlumnoIndexRouteImport } from './routes/alumno.index'
 import { Route as DemoConfiguracionRouteImport } from './routes/demo.configuracion'
 import { Route as DemoChatRouteImport } from './routes/demo.chat'
 import { Route as DemoBandejaRouteImport } from './routes/demo.bandeja'
+import { Route as AlumnoPerfilRouteImport } from './routes/alumno.perfil'
+import { Route as AlumnoNutricionRouteImport } from './routes/alumno.nutricion'
+import { Route as AlumnoEntrenamientoRouteImport } from './routes/alumno.entrenamiento'
+import { Route as AlumnoChatRouteImport } from './routes/alumno.chat'
 import { Route as DemoAlumnosIndexRouteImport } from './routes/demo.alumnos.index'
 import { Route as DemoAlumnosNuevoRouteImport } from './routes/demo.alumnos.nuevo'
 import { Route as DemoAlumnosIdRouteImport } from './routes/demo.alumnos.$id'
@@ -30,6 +36,11 @@ const DemoRoute = DemoRouteImport.update({
   path: '/demo',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AlumnoRoute = AlumnoRouteImport.update({
+  id: '/alumno',
+  path: '/alumno',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -39,6 +50,11 @@ const DemoIndexRoute = DemoIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => DemoRoute,
+} as any)
+const AlumnoIndexRoute = AlumnoIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AlumnoRoute,
 } as any)
 const DemoConfiguracionRoute = DemoConfiguracionRouteImport.update({
   id: '/configuracion',
@@ -54,6 +70,26 @@ const DemoBandejaRoute = DemoBandejaRouteImport.update({
   id: '/bandeja',
   path: '/bandeja',
   getParentRoute: () => DemoRoute,
+} as any)
+const AlumnoPerfilRoute = AlumnoPerfilRouteImport.update({
+  id: '/perfil',
+  path: '/perfil',
+  getParentRoute: () => AlumnoRoute,
+} as any)
+const AlumnoNutricionRoute = AlumnoNutricionRouteImport.update({
+  id: '/nutricion',
+  path: '/nutricion',
+  getParentRoute: () => AlumnoRoute,
+} as any)
+const AlumnoEntrenamientoRoute = AlumnoEntrenamientoRouteImport.update({
+  id: '/entrenamiento',
+  path: '/entrenamiento',
+  getParentRoute: () => AlumnoRoute,
+} as any)
+const AlumnoChatRoute = AlumnoChatRouteImport.update({
+  id: '/chat',
+  path: '/chat',
+  getParentRoute: () => AlumnoRoute,
 } as any)
 const DemoAlumnosIndexRoute = DemoAlumnosIndexRouteImport.update({
   id: '/alumnos/',
@@ -73,11 +109,17 @@ const DemoAlumnosIdRoute = DemoAlumnosIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/alumno': typeof AlumnoRouteWithChildren
   '/demo': typeof DemoRouteWithChildren
   '/registro': typeof RegistroRoute
+  '/alumno/chat': typeof AlumnoChatRoute
+  '/alumno/entrenamiento': typeof AlumnoEntrenamientoRoute
+  '/alumno/nutricion': typeof AlumnoNutricionRoute
+  '/alumno/perfil': typeof AlumnoPerfilRoute
   '/demo/bandeja': typeof DemoBandejaRoute
   '/demo/chat': typeof DemoChatRoute
   '/demo/configuracion': typeof DemoConfiguracionRoute
+  '/alumno/': typeof AlumnoIndexRoute
   '/demo/': typeof DemoIndexRoute
   '/demo/alumnos/$id': typeof DemoAlumnosIdRoute
   '/demo/alumnos/nuevo': typeof DemoAlumnosNuevoRoute
@@ -86,9 +128,14 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/registro': typeof RegistroRoute
+  '/alumno/chat': typeof AlumnoChatRoute
+  '/alumno/entrenamiento': typeof AlumnoEntrenamientoRoute
+  '/alumno/nutricion': typeof AlumnoNutricionRoute
+  '/alumno/perfil': typeof AlumnoPerfilRoute
   '/demo/bandeja': typeof DemoBandejaRoute
   '/demo/chat': typeof DemoChatRoute
   '/demo/configuracion': typeof DemoConfiguracionRoute
+  '/alumno': typeof AlumnoIndexRoute
   '/demo': typeof DemoIndexRoute
   '/demo/alumnos/$id': typeof DemoAlumnosIdRoute
   '/demo/alumnos/nuevo': typeof DemoAlumnosNuevoRoute
@@ -97,11 +144,17 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/alumno': typeof AlumnoRouteWithChildren
   '/demo': typeof DemoRouteWithChildren
   '/registro': typeof RegistroRoute
+  '/alumno/chat': typeof AlumnoChatRoute
+  '/alumno/entrenamiento': typeof AlumnoEntrenamientoRoute
+  '/alumno/nutricion': typeof AlumnoNutricionRoute
+  '/alumno/perfil': typeof AlumnoPerfilRoute
   '/demo/bandeja': typeof DemoBandejaRoute
   '/demo/chat': typeof DemoChatRoute
   '/demo/configuracion': typeof DemoConfiguracionRoute
+  '/alumno/': typeof AlumnoIndexRoute
   '/demo/': typeof DemoIndexRoute
   '/demo/alumnos/$id': typeof DemoAlumnosIdRoute
   '/demo/alumnos/nuevo': typeof DemoAlumnosNuevoRoute
@@ -111,11 +164,17 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/alumno'
     | '/demo'
     | '/registro'
+    | '/alumno/chat'
+    | '/alumno/entrenamiento'
+    | '/alumno/nutricion'
+    | '/alumno/perfil'
     | '/demo/bandeja'
     | '/demo/chat'
     | '/demo/configuracion'
+    | '/alumno/'
     | '/demo/'
     | '/demo/alumnos/$id'
     | '/demo/alumnos/nuevo'
@@ -124,9 +183,14 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/registro'
+    | '/alumno/chat'
+    | '/alumno/entrenamiento'
+    | '/alumno/nutricion'
+    | '/alumno/perfil'
     | '/demo/bandeja'
     | '/demo/chat'
     | '/demo/configuracion'
+    | '/alumno'
     | '/demo'
     | '/demo/alumnos/$id'
     | '/demo/alumnos/nuevo'
@@ -134,11 +198,17 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
+    | '/alumno'
     | '/demo'
     | '/registro'
+    | '/alumno/chat'
+    | '/alumno/entrenamiento'
+    | '/alumno/nutricion'
+    | '/alumno/perfil'
     | '/demo/bandeja'
     | '/demo/chat'
     | '/demo/configuracion'
+    | '/alumno/'
     | '/demo/'
     | '/demo/alumnos/$id'
     | '/demo/alumnos/nuevo'
@@ -147,6 +217,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AlumnoRoute: typeof AlumnoRouteWithChildren
   DemoRoute: typeof DemoRouteWithChildren
   RegistroRoute: typeof RegistroRoute
 }
@@ -167,6 +238,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/alumno': {
+      id: '/alumno'
+      path: '/alumno'
+      fullPath: '/alumno'
+      preLoaderRoute: typeof AlumnoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -180,6 +258,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/demo/'
       preLoaderRoute: typeof DemoIndexRouteImport
       parentRoute: typeof DemoRoute
+    }
+    '/alumno/': {
+      id: '/alumno/'
+      path: '/'
+      fullPath: '/alumno/'
+      preLoaderRoute: typeof AlumnoIndexRouteImport
+      parentRoute: typeof AlumnoRoute
     }
     '/demo/configuracion': {
       id: '/demo/configuracion'
@@ -201,6 +286,34 @@ declare module '@tanstack/react-router' {
       fullPath: '/demo/bandeja'
       preLoaderRoute: typeof DemoBandejaRouteImport
       parentRoute: typeof DemoRoute
+    }
+    '/alumno/perfil': {
+      id: '/alumno/perfil'
+      path: '/perfil'
+      fullPath: '/alumno/perfil'
+      preLoaderRoute: typeof AlumnoPerfilRouteImport
+      parentRoute: typeof AlumnoRoute
+    }
+    '/alumno/nutricion': {
+      id: '/alumno/nutricion'
+      path: '/nutricion'
+      fullPath: '/alumno/nutricion'
+      preLoaderRoute: typeof AlumnoNutricionRouteImport
+      parentRoute: typeof AlumnoRoute
+    }
+    '/alumno/entrenamiento': {
+      id: '/alumno/entrenamiento'
+      path: '/entrenamiento'
+      fullPath: '/alumno/entrenamiento'
+      preLoaderRoute: typeof AlumnoEntrenamientoRouteImport
+      parentRoute: typeof AlumnoRoute
+    }
+    '/alumno/chat': {
+      id: '/alumno/chat'
+      path: '/chat'
+      fullPath: '/alumno/chat'
+      preLoaderRoute: typeof AlumnoChatRouteImport
+      parentRoute: typeof AlumnoRoute
     }
     '/demo/alumnos/': {
       id: '/demo/alumnos/'
@@ -226,6 +339,25 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AlumnoRouteChildren {
+  AlumnoChatRoute: typeof AlumnoChatRoute
+  AlumnoEntrenamientoRoute: typeof AlumnoEntrenamientoRoute
+  AlumnoNutricionRoute: typeof AlumnoNutricionRoute
+  AlumnoPerfilRoute: typeof AlumnoPerfilRoute
+  AlumnoIndexRoute: typeof AlumnoIndexRoute
+}
+
+const AlumnoRouteChildren: AlumnoRouteChildren = {
+  AlumnoChatRoute: AlumnoChatRoute,
+  AlumnoEntrenamientoRoute: AlumnoEntrenamientoRoute,
+  AlumnoNutricionRoute: AlumnoNutricionRoute,
+  AlumnoPerfilRoute: AlumnoPerfilRoute,
+  AlumnoIndexRoute: AlumnoIndexRoute,
+}
+
+const AlumnoRouteWithChildren =
+  AlumnoRoute._addFileChildren(AlumnoRouteChildren)
+
 interface DemoRouteChildren {
   DemoBandejaRoute: typeof DemoBandejaRoute
   DemoChatRoute: typeof DemoChatRoute
@@ -250,19 +382,10 @@ const DemoRouteWithChildren = DemoRoute._addFileChildren(DemoRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AlumnoRoute: AlumnoRouteWithChildren,
   DemoRoute: DemoRouteWithChildren,
   RegistroRoute: RegistroRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
