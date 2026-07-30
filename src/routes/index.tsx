@@ -118,7 +118,7 @@ function Nav() {
           <a href="#faq" className="hover:text-foreground transition-colors">FAQ</a>
         </nav>
         <div className="hidden items-center gap-2 md:flex">
-          <a href="#" className="rounded-lg px-3 py-2 text-sm text-ink-muted hover:text-foreground transition-colors">
+          <a href="/iniciar-sesion" className="rounded-lg px-3 py-2 text-sm text-ink-muted hover:text-foreground transition-colors">
             Iniciar sesión
           </a>
           <a
@@ -144,6 +144,7 @@ function Nav() {
             <a href="#everything">Funciones</a>
             <a href="#pricing">Precios</a>
             <a href="#faq">FAQ</a>
+            <a href="/iniciar-sesion">Iniciar sesión</a>
             <a href="/registro" className="mt-2 inline-flex items-center justify-center rounded-lg bg-foreground px-4 py-2.5 font-medium text-background">
               Empieza gratis
             </a>

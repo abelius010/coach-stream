@@ -13,6 +13,7 @@ import {
   type AccountProfile,
 } from "../lib/fitflow-mode";
 import { resetAccountStore } from "../lib/demo-store";
+import { signUpTrainer } from "../lib/auth";
 
 export const Route = createFileRoute("/registro")({
   head: () => ({
@@ -127,6 +128,8 @@ function RegistroPage() {
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<Draft>(empty);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   const set = <K extends keyof Draft>(k: K, v: Draft[K]) =>
     setDraft((d) => ({ ...d, [k]: v }));
@@ -169,7 +172,15 @@ function RegistroPage() {
   };
   const back = () => setStep((s) => Math.max(0, s - 1));
 
-  const finish = () => {
+  const finish = async () => {
+    setAuthError(null);
+    setAuthLoading(true);
+    const { user, error } = await signUpTrainer(draft.email.trim(), draft.password);
+    setAuthLoading(false);
+    if (error || !user) {
+      setAuthError(error || "No se pudo crear la cuenta. Inténtalo de nuevo.");
+      return;
+    }
     const profile: AccountProfile = {
       firstName: draft.firstName.trim(),
       lastName: draft.lastName.trim(),
@@ -415,11 +426,15 @@ function RegistroPage() {
                 Tu cuenta está lista, {draft.firstName || "entrenador"}. Ya puedes empezar a
                 gestionar a tus alumnos desde un único lugar.
               </p>
+              {authError && (
+                <p className="mx-auto mt-3 max-w-md text-sm text-rose-600">{authError}</p>
+              )}
               <button
                 onClick={finish}
-                className="mt-8 inline-flex items-center gap-2 rounded-xl bg-foreground px-6 py-3 text-sm font-medium text-background hover:opacity-90"
+                disabled={authLoading}
+                className="mt-8 inline-flex items-center gap-2 rounded-xl bg-foreground px-6 py-3 text-sm font-medium text-background hover:opacity-90 disabled:opacity-60"
               >
-                Entrar al dashboard
+                {authLoading ? "Creando tu cuenta…" : "Entrar al dashboard"}
                 <ArrowRight className="h-4 w-4" />
               </button>
             </div>

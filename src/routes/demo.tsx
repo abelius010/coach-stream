@@ -1,4 +1,4 @@
-import { createFileRoute, Outlet, Link, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Outlet, Link, useRouterState, useNavigate } from "@tanstack/react-router";
 import { DemoBanner } from "@/components/demo/DemoBanner";
 import {
   LayoutDashboard,
@@ -16,9 +16,12 @@ import {
   displayName,
   initials,
   setMode,
+  clearAccountProfile,
 } from "../lib/fitflow-mode";
-import { useDemoStore } from "../lib/demo-store";
+import { useEffect } from "react";
+import { useDemoStore, hydrateStudentsFromSupabase, resetAccountStore } from "../lib/demo-store";
 import { RoleSwitcher } from "@/components/dev/RoleSwitcher";
+import { useAuthUser, signOutTrainer } from "../lib/auth";
 
 export const Route = createFileRoute("/demo")({
   head: () => ({
@@ -45,6 +48,27 @@ function DemoLayout() {
   const isDemo = mode === "demo";
   const students = useDemoStore((s) => s.students);
   const messagesMap = useDemoStore((s) => s.messages);
+  const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuthUser();
+
+  // En modo "cuenta real" (no demo), exige sesión iniciada y carga los
+  // alumnos guardados en Supabase. La demo de marketing no necesita login.
+  useEffect(() => {
+    if (isDemo) return;
+    if (authLoading) return;
+    if (!user) {
+      navigate({ to: "/iniciar-sesion" });
+      return;
+    }
+    hydrateStudentsFromSupabase();
+  }, [isDemo, authLoading, user, navigate]);
+
+  // En modo "cuenta real" (no demo), carga los alumnos guardados en Supabase.
+  useEffect(() => {
+    if (!isDemo) {
+      hydrateStudentsFromSupabase();
+    }
+  }, [isDemo]);
   const pendingMessages = Object.values(messagesMap).reduce((n, list) => n + list.length, 0);
   const profile = getAccountProfile();
 
@@ -72,11 +96,28 @@ function DemoLayout() {
 
   const exitToLanding = () => {
     if (typeof window !== "undefined") {
+      if (!isDemo) {
+        signOutTrainer();
+        // Evita que queden alumnos/rutinas/mensajes de esta cuenta visibles
+        // si otra persona (u otra cuenta) usa este mismo navegador después.
+        resetAccountStore();
+        clearAccountProfile();
+      }
       // Reset mode to demo default when leaving so landing behaves as expected.
       setMode("demo");
       window.location.href = "/";
     }
   };
+
+  // Evita mostrar el panel con datos vacíos mientras comprobamos la sesión
+  // o redirigimos a /iniciar-sesion.
+  if (!isDemo && (authLoading || !user)) {
+    return (
+      <div className="grid min-h-screen place-items-center bg-surface text-sm text-ink-muted">
+        Comprobando sesión…
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen w-full bg-surface">
