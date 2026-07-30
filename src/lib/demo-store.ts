@@ -2,6 +2,7 @@ import { create, type StoreApi, type UseBoundStore } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { students as seedStudents, workoutWeeks as seedWorkoutWeeks, nutritionPlan as seedNutrition, type Student } from "./demo-data";
 import { getMode } from "./fitflow-mode";
+import { supabase } from "./supabase";
 
 export type StudentExt = Student & {
   lastName?: string;
@@ -347,7 +348,161 @@ const EMPTY_SEED: Seed = {
   nutritionTemplates: [],
 };
 
-const createFitFlowStore = (persistName: string, seed: Seed) =>
+// --- Supabase sync helpers (solo se usan para la tienda "account", nunca
+// para la tienda "demo" de marketing) ---------------------------------
+
+const studentToRow = (s: StudentExt) => ({
+  id: s.id,
+  name: s.name,
+  last_name: s.lastName ?? null,
+  avatar: s.avatar ?? null,
+  email: s.email ?? null,
+  phone: s.phone ?? null,
+  birth_date: s.birthDate ?? null,
+  sex: s.sex ?? null,
+  goal: s.goal ?? null,
+  secondary_goal: s.secondaryGoal ?? null,
+  weight: s.weight ?? null,
+  weight_start: s.weightStart ?? null,
+  weight_goal: s.weightGoal ?? null,
+  height: s.height ?? null,
+  age: s.age ?? null,
+  body_fat: s.bodyFat ?? null,
+  measurements: s.measurements ?? null,
+  status: s.status,
+  last_active: s.lastActive ?? null,
+  compliance: s.compliance ?? 0,
+  start_date: s.startDate ?? null,
+  plan: s.plan ?? null,
+  experience: s.experience ?? null,
+  days_per_week: s.daysPerWeek ?? null,
+  session_minutes: s.sessionMinutes ?? null,
+  equipment: s.equipment ?? null,
+  preference: s.preference ?? null,
+  injuries: s.injuries ?? null,
+  coach_notes: s.coachNotes ?? null,
+  next_review: s.nextReview ?? null,
+  created_at: s.createdAt ?? null,
+});
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const rowToStudent = (r: any): StudentExt => ({
+  id: r.id,
+  name: r.name,
+  lastName: r.last_name ?? undefined,
+  avatar: r.avatar ?? "",
+  email: r.email ?? undefined,
+  phone: r.phone ?? undefined,
+  birthDate: r.birth_date ?? undefined,
+  sex: r.sex ?? undefined,
+  goal: r.goal ?? "",
+  secondaryGoal: r.secondary_goal ?? undefined,
+  weight: r.weight ?? 0,
+  weightStart: r.weight_start ?? 0,
+  weightGoal: r.weight_goal ?? 0,
+  height: r.height ?? 0,
+  age: r.age ?? 0,
+  bodyFat: r.body_fat ?? undefined,
+  measurements: r.measurements ?? undefined,
+  status: r.status ?? "activo",
+  lastActive: r.last_active ?? "",
+  compliance: r.compliance ?? 0,
+  startDate: r.start_date ?? "",
+  plan: r.plan ?? "",
+  experience: r.experience ?? undefined,
+  daysPerWeek: r.days_per_week ?? undefined,
+  sessionMinutes: r.session_minutes ?? undefined,
+  equipment: r.equipment ?? undefined,
+  preference: r.preference ?? undefined,
+  injuries: r.injuries ?? undefined,
+  coachNotes: r.coach_notes ?? undefined,
+  nextReview: r.next_review ?? undefined,
+  createdAt: r.created_at ?? undefined,
+});
+
+const syncAddStudent = (synced: boolean, s: StudentExt) => {
+  if (!synced) return;
+  supabase
+    .from("alumnos")
+    .insert(studentToRow(s))
+    .then(({ error }) => {
+      if (error) console.error("[supabase] Error creando alumno:", error.message);
+    });
+};
+
+// Maps StudentExt keys to their column name in `alumnos`. Used so a partial
+// update only ever touches the columns that actually changed.
+const FIELD_TO_COLUMN: Record<string, string> = {
+  name: "name",
+  lastName: "last_name",
+  avatar: "avatar",
+  email: "email",
+  phone: "phone",
+  birthDate: "birth_date",
+  sex: "sex",
+  goal: "goal",
+  secondaryGoal: "secondary_goal",
+  weight: "weight",
+  weightStart: "weight_start",
+  weightGoal: "weight_goal",
+  height: "height",
+  age: "age",
+  bodyFat: "body_fat",
+  measurements: "measurements",
+  status: "status",
+  lastActive: "last_active",
+  compliance: "compliance",
+  startDate: "start_date",
+  plan: "plan",
+  experience: "experience",
+  daysPerWeek: "days_per_week",
+  sessionMinutes: "session_minutes",
+  equipment: "equipment",
+  preference: "preference",
+  injuries: "injuries",
+  coachNotes: "coach_notes",
+  nextReview: "next_review",
+  createdAt: "created_at",
+};
+
+const syncUpdateStudent = (synced: boolean, id: string, patch: Partial<StudentExt>) => {
+  if (!synced) return;
+  const partialRow: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(patch)) {
+    const column = FIELD_TO_COLUMN[key];
+    if (column) partialRow[column] = value;
+  }
+  if (Object.keys(partialRow).length === 0) return;
+  supabase
+    .from("alumnos")
+    .update(partialRow)
+    .eq("id", id)
+    .then(({ error }) => {
+      if (error) console.error("[supabase] Error actualizando alumno:", error.message);
+    });
+};
+
+const syncRemoveStudent = (synced: boolean, id: string) => {
+  if (!synced) return;
+  supabase
+    .from("alumnos")
+    .delete()
+    .eq("id", id)
+    .then(({ error }) => {
+      if (error) console.error("[supabase] Error eliminando alumno:", error.message);
+    });
+};
+
+export const hydrateStudentsFromSupabase = async () => {
+  const { data, error } = await supabase.from("alumnos").select("*").order("created_at", { ascending: false });
+  if (error) {
+    console.error("[supabase] Error cargando alumnos:", error.message);
+    return;
+  }
+  accountStore.setState({ students: (data ?? []).map(rowToStudent) });
+};
+
+const createFitFlowStore = (persistName: string, seed: Seed, synced: boolean) =>
   create<State>()(
     persist(
       (set, get) => ({
@@ -422,13 +577,17 @@ const createFitFlowStore = (persistName: string, seed: Seed) =>
             createdAt: now,
           };
           set({ students: [student, ...state.students] });
+          syncAddStudent(synced, student);
           return id;
         },
-        updateStudent: (id, patch) =>
+        updateStudent: (id, patch) => {
           set({
             students: get().students.map((s) => (s.id === id ? { ...s, ...patch } : s)),
-          }),
+          });
+          syncUpdateStudent(synced, id, patch);
+        },
         removeStudent: (id) => {
+          syncRemoveStudent(synced, id);
           const s = get();
           const omit = <T,>(r: Record<string, T>) => {
             const { [id]: _drop, ...rest } = r;
@@ -757,8 +916,8 @@ const createFitFlowStore = (persistName: string, seed: Seed) =>
     ),
   );
 
-const demoStore = createFitFlowStore("fitflow-demo", DEMO_SEED);
-const accountStore = createFitFlowStore("fitflow-account", EMPTY_SEED);
+const demoStore = createFitFlowStore("fitflow-demo", DEMO_SEED, false);
+const accountStore = createFitFlowStore("fitflow-account", EMPTY_SEED, true);
 
 const pickStore = (): UseBoundStore<StoreApi<State>> =>
   getMode() === "account" ? accountStore : demoStore;
