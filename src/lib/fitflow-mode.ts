@@ -96,16 +96,33 @@ export const getAccountProfile = (): AccountProfile | null => {
   }
 };
 
+const profileListeners = new Set<() => void>();
+
+const subscribeProfile = (cb: () => void) => {
+  profileListeners.add(cb);
+  return () => {
+    profileListeners.delete(cb);
+  };
+};
+
+// Hook seguro para SSR (mismo patrón que useMode): en el servidor y en la
+// primera pintada del navegador siempre devuelve null, evitando el
+// desajuste de hidratación que producía leer localStorage directamente.
+export const useAccountProfile = (): AccountProfile | null =>
+  useSyncExternalStore(subscribeProfile, getAccountProfile, () => null);
+
 export const setAccountProfile = (p: AccountProfile) => {
   try {
     localStorage.setItem(PROFILE_KEY, JSON.stringify(p));
   } catch {}
+  profileListeners.forEach((l) => l());
 };
 
 export const clearAccountProfile = () => {
   try {
     localStorage.removeItem(PROFILE_KEY);
   } catch {}
+  profileListeners.forEach((l) => l());
 };
 
 export const displayName = (p: AccountProfile | null): string => {
