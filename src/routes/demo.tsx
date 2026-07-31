@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import {
   useMode,
-  getAccountProfile,
+  useAccountProfile,
   displayName,
   initials,
   setMode,
@@ -82,7 +82,7 @@ function DemoLayout() {
     return () => window.removeEventListener("pageshow", onPageShow);
   }, []);
   const pendingMessages = Object.values(messagesMap).reduce((n, list) => n + list.length, 0);
-  const profile = mounted ? getAccountProfile() : null;
+  const profile = useAccountProfile();
 
   const nav: NavItem[] = [
     { to: "/demo", label: "Inicio", icon: LayoutDashboard, exact: true },
