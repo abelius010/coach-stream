@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { activityFeed, smartTasks, stats, students as seededStudents } from "../lib/demo-data";
 import { useDemoStore } from "../lib/demo-store";
-import { useMode, getAccountProfile, getPlanLimit } from "../lib/fitflow-mode";
+import { useMode, useAccountProfile, getPlanLimit } from "../lib/fitflow-mode";
 import { PlanLimitBanner } from "../components/demo/PlanLimitBanner";
 
 export const Route = createFileRoute("/demo/")({
@@ -44,7 +44,7 @@ function DemoDashboard() {
   const reviews = useDemoStore((s) => s.reviews);
 
   const isAccount = mode === "account";
-  const profile = getAccountProfile();
+  const profile = useAccountProfile();
   const firstName = profile?.firstName || "entrenador";
 
   if (isAccount) {
