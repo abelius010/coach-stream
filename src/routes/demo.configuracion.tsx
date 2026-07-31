@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { Check, CreditCard, Bell, Shield, User, Building2, Sparkles } from "lucide-react";
-import { useMode, getAccountProfile, planLabel, getPlanLimit } from "../lib/fitflow-mode";
+import { useMode, useAccountProfile, planLabel, getPlanLimit } from "../lib/fitflow-mode";
 import { useDemoStore } from "../lib/demo-store";
 import { ToastStack, type ToastData } from "../components/demo/Toast";
 
@@ -114,7 +114,8 @@ const upgradePlans = [
 
 function PlanTab() {
   const mode = useMode();
-  const profile = mode === "account" ? getAccountProfile() : null;
+  const accountProfile = useAccountProfile();
+  const profile = mode === "account" ? accountProfile : null;
   const plan = mode === "account" ? profile?.plan ?? "gratuito" : "pro";
   const students = useDemoStore((s) => s.students);
   const limit = getPlanLimit(plan);

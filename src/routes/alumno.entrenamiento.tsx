@@ -17,7 +17,7 @@ import {
   type RoutineWeek,
 } from "@/lib/demo-store";
 import { useActiveAlumnoId } from "@/lib/fitflow-mode";
-import { getAccountProfile, displayName } from "@/lib/fitflow-mode";
+import { useAccountProfile, displayName } from "@/lib/fitflow-mode";
 
 export const Route = createFileRoute("/alumno/entrenamiento")({
   head: () => ({
@@ -38,7 +38,7 @@ function AlumnoEntrenamiento() {
   );
   const weeks = useDemoStore((s) => (studentId ? s.routines[studentId] : undefined));
   const progress = useDemoStore((s) => (studentId ? s.workoutProgress[studentId] : undefined));
-  const coachName = displayName(getAccountProfile());
+  const coachName = displayName(useAccountProfile());
 
   const activeDay = useMemo(() => pickActiveDay(weeks), [weeks]);
 

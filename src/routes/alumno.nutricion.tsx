@@ -26,7 +26,7 @@ import {
   type HabitLog,
 } from "@/lib/demo-store";
 import { useActiveAlumnoId } from "@/lib/fitflow-mode";
-import { getAccountProfile, displayName } from "@/lib/fitflow-mode";
+import { useAccountProfile, displayName } from "@/lib/fitflow-mode";
 
 export const Route = createFileRoute("/alumno/nutricion")({
   head: () => ({
@@ -82,7 +82,7 @@ function AlumnoNutricion() {
   ) ?? 1;
   const finishNutritionDay = useDemoStore((s) => s.finishNutritionDay);
 
-  const coachName = displayName(getAccountProfile());
+  const coachName = displayName(useAccountProfile());
   const [dayClosed, setDayClosed] = useState(false);
 
   if (!studentId || !student) {

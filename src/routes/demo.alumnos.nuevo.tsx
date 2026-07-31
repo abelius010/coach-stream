@@ -3,7 +3,7 @@ import { useState } from "react";
 import { ArrowLeft, ArrowRight, Check, X } from "lucide-react";
 import { useDemoStore, type NewStudentInput } from "../lib/demo-store";
 import { Field, inputCls, selectCls, textareaCls } from "../components/demo/Field";
-import { useMode, getAccountProfile, getPlanLimit } from "../lib/fitflow-mode";
+import { useMode, useAccountProfile, getPlanLimit } from "../lib/fitflow-mode";
 import { PlanLimitBanner } from "../components/demo/PlanLimitBanner";
 
 export const Route = createFileRoute("/demo/alumnos/nuevo")({
@@ -64,7 +64,8 @@ function NuevoAlumno() {
   const mode = useMode();
   const students = useDemoStore((s) => s.students);
   const addStudent = useDemoStore((s) => s.addStudent);
-  const planLimit = mode === "account" ? getPlanLimit(getAccountProfile()?.plan) : null;
+  const nuevoProfile = useAccountProfile();
+  const planLimit = mode === "account" ? getPlanLimit(nuevoProfile?.plan) : null;
   const reachedLimit = planLimit !== null && students.length >= planLimit;
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<Draft>(() => {

@@ -15,7 +15,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { useDemoStore, parseSetsCount, type RoutineDay, type RoutineWeek, type ChatMsg } from "@/lib/demo-store";
-import { useActiveAlumnoId, getAccountProfile, displayName } from "@/lib/fitflow-mode";
+import { useActiveAlumnoId, useAccountProfile, displayName } from "@/lib/fitflow-mode";
 
 const EMPTY_MESSAGES: ChatMsg[] = [];
 
@@ -63,7 +63,7 @@ function AlumnoInicio() {
   const messages = useDemoStore((s) => (studentId ? s.messages[studentId] : undefined)) ?? EMPTY_MESSAGES;
 
   const next = pickNextDay(weeks);
-  const coachName = displayName(getAccountProfile());
+  const coachName = displayName(useAccountProfile());
   const firstName = student?.name.split(" ")[0] ?? "Alumno";
   const initials = firstName[0]?.toUpperCase() ?? "A";
   const motivator = motivators[Math.floor(Math.random() * motivators.length)];

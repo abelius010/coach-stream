@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Filter, Plus, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useDemoStore, type StudentExt } from "../lib/demo-store";
-import { useMode, getAccountProfile, getPlanLimit } from "../lib/fitflow-mode";
+import { useMode, useAccountProfile, getPlanLimit } from "../lib/fitflow-mode";
 import { PlanLimitBanner } from "../components/demo/PlanLimitBanner";
 
 export const Route = createFileRoute("/demo/alumnos/")({
@@ -33,7 +33,8 @@ const filterLabel: Record<FilterKey, string> = {
 function AlumnosList() {
   const students = useDemoStore((s) => s.students);
   const mode = useMode();
-  const planLimit = mode === "account" ? getPlanLimit(getAccountProfile()?.plan) : null;
+  const profile = useAccountProfile();
+  const planLimit = mode === "account" ? getPlanLimit(profile?.plan) : null;
   const reachedLimit = planLimit !== null && students.length >= planLimit;
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<FilterKey>("todos");
