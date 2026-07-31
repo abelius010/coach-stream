@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
+import { resetAccountStore } from "./demo-store";
 
 export type AuthResult = { user: User | null; error: string | null };
 
@@ -8,6 +9,8 @@ export const signUpTrainer = async (email: string, password: string): Promise<Au
   try {
     const { data, error } = await supabase.auth.signUp({ email, password });
     if (error) return { user: null, error: mapAuthError(error.message) };
+    // eslint-disable-next-line no-console
+    console.log("[debug] signUpTrainer OK →", data.user?.id, data.user?.email, new Date().toISOString());
     return { user: data.user, error: null };
   } catch (err) {
     console.error("[auth] Error de red al registrarse:", err);
@@ -19,6 +22,8 @@ export const signInTrainer = async (email: string, password: string): Promise<Au
   try {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return { user: null, error: mapAuthError(error.message) };
+    // eslint-disable-next-line no-console
+    console.log("[debug] signInTrainer OK →", data.user?.id, data.user?.email, new Date().toISOString());
     return { user: data.user, error: null };
   } catch (err) {
     console.error("[auth] Error de red al iniciar sesión:", err);
@@ -26,8 +31,18 @@ export const signInTrainer = async (email: string, password: string): Promise<Au
   }
 };
 
-export const signOutTrainer = async (): Promise<void> => {
-  await supabase.auth.signOut();
+export const signOutTrainer = async (): Promise<{ error: string | null }> => {
+  const { error } = await supabase.auth.signOut();
+  if (error) {
+    console.error("[auth] Error al cerrar sesión:", error.message);
+    return { error: "No se pudo cerrar sesión correctamente." };
+  }
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+  // eslint-disable-next-line no-console
+  console.log("[debug] Tras signOut, session debería ser null →", session);
+  return { error: null };
 };
 
 const mapAuthError = (message: string): string => {
@@ -41,21 +56,42 @@ const mapAuthError = (message: string): string => {
 
 // Hook: expone el usuario autenticado actual y si todavía se está
 // comprobando la sesión inicial (para no redirigir de más mientras carga).
+// Única suscripción a onAuthStateChange en toda la app.
 export const useAuthUser = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const lastUserId = useRef<string | null>(null);
 
   useEffect(() => {
     let active = true;
+
     supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
-      setUser(data.session?.user ?? null);
+      const sessionUser = data.session?.user ?? null;
+      // eslint-disable-next-line no-console
+      console.log("[debug] INITIAL_SESSION →", sessionUser?.id, sessionUser?.email);
+      lastUserId.current = sessionUser?.id ?? null;
+      setUser(sessionUser);
       setLoading(false);
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      const sessionUser = session?.user ?? null;
+      // eslint-disable-next-line no-console
+      console.log("[debug]", event, "→", sessionUser?.id, sessionUser?.email);
+
+      // Si el usuario autenticado ha cambiado (login con otra cuenta, o
+      // sesión cerrada), limpia inmediatamente cualquier dato local de la
+      // cuenta anterior antes de que el resto de la app vuelva a pintar.
+      if (sessionUser?.id !== lastUserId.current) {
+        resetAccountStore();
+      }
+      lastUserId.current = sessionUser?.id ?? null;
+
+      setUser(sessionUser);
       setLoading(false);
     });
+
     return () => {
       active = false;
       sub.subscription.unsubscribe();

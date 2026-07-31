@@ -420,14 +420,21 @@ const rowToStudent = (r: any): StudentExt => ({
   createdAt: r.created_at ?? undefined,
 });
 
-const syncAddStudent = (synced: boolean, s: StudentExt) => {
+const syncAddStudent = async (synced: boolean, s: StudentExt) => {
   if (!synced) return;
-  supabase
-    .from("alumnos")
-    .insert(studentToRow(s))
-    .then(({ error }) => {
-      if (error) console.error("[supabase] Error creando alumno:", error.message);
-    });
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  // eslint-disable-next-line no-console
+  console.log("[debug] syncAddStudent → usuario autenticado:", user?.id, user?.email);
+  if (userError || !user) {
+    console.error("[supabase] No hay sesión activa, no se crea el alumno:", userError?.message);
+    return;
+  }
+  const row = { ...studentToRow(s), trainer_id: user.id };
+  const { error } = await supabase.from("alumnos").insert(row);
+  if (error) console.error("[supabase] Error creando alumno:", error.message);
 };
 
 // Maps StudentExt keys to their column name in `alumnos`. Used so a partial
@@ -465,7 +472,7 @@ const FIELD_TO_COLUMN: Record<string, string> = {
   createdAt: "created_at",
 };
 
-const syncUpdateStudent = (synced: boolean, id: string, patch: Partial<StudentExt>) => {
+const syncUpdateStudent = async (synced: boolean, id: string, patch: Partial<StudentExt>) => {
   if (!synced) return;
   const partialRow: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(patch)) {
@@ -473,32 +480,61 @@ const syncUpdateStudent = (synced: boolean, id: string, patch: Partial<StudentEx
     if (column) partialRow[column] = value;
   }
   if (Object.keys(partialRow).length === 0) return;
-  supabase
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    console.error("[supabase] No hay sesión activa, no se actualiza el alumno.");
+    return;
+  }
+  const { error } = await supabase
     .from("alumnos")
     .update(partialRow)
     .eq("id", id)
-    .then(({ error }) => {
-      if (error) console.error("[supabase] Error actualizando alumno:", error.message);
-    });
+    .eq("trainer_id", user.id);
+  if (error) console.error("[supabase] Error actualizando alumno:", error.message);
 };
 
-const syncRemoveStudent = (synced: boolean, id: string) => {
+const syncRemoveStudent = async (synced: boolean, id: string) => {
   if (!synced) return;
-  supabase
-    .from("alumnos")
-    .delete()
-    .eq("id", id)
-    .then(({ error }) => {
-      if (error) console.error("[supabase] Error eliminando alumno:", error.message);
-    });
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    console.error("[supabase] No hay sesión activa, no se elimina el alumno.");
+    return;
+  }
+  const { error } = await supabase.from("alumnos").delete().eq("id", id).eq("trainer_id", user.id);
+  if (error) console.error("[supabase] Error eliminando alumno:", error.message);
 };
 
 export const hydrateStudentsFromSupabase = async () => {
-  const { data, error } = await supabase.from("alumnos").select("*").order("created_at", { ascending: false });
-  if (error) {
-    console.error("[supabase] Error cargando alumnos:", error.message);
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser();
+  // eslint-disable-next-line no-console
+  console.log("[debug] hydrateStudentsFromSupabase → usuario autenticado:", user?.id, user?.email);
+  if (userError || !user) {
+    console.error("[supabase] No hay sesión activa, no se cargan alumnos:", userError?.message);
+    accountStore.setState({ students: [] });
     return;
   }
+  const { data, error } = await supabase
+    .from("alumnos")
+    .select("*")
+    .eq("trainer_id", user.id)
+    .order("created_at", { ascending: false });
+  if (error) {
+    console.error("[supabase] Error cargando alumnos:", error.message);
+    accountStore.setState({ students: [] });
+    return;
+  }
+  // eslint-disable-next-line no-console
+  console.log(
+    "[debug] alumnos recibidos:",
+    (data ?? []).map((r) => ({ id: r.id, name: r.name, trainer_id: r.trainer_id })),
+  );
   accountStore.setState({ students: (data ?? []).map(rowToStudent) });
 };
 
