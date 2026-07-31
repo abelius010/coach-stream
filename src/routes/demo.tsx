@@ -18,7 +18,7 @@ import {
   setMode,
   clearAccountProfile,
 } from "../lib/fitflow-mode";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useDemoStore, hydrateStudentsFromSupabase, resetAccountStore } from "../lib/demo-store";
 import { RoleSwitcher } from "@/components/dev/RoleSwitcher";
 import { useAuthUser, signOutTrainer } from "../lib/auth";
@@ -51,9 +51,17 @@ function DemoLayout() {
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuthUser();
 
+  // El servidor nunca tiene acceso a localStorage/Supabase, así que la
+  // primera pintada en el navegador debe ser idéntica a la del servidor.
+  // Solo después de montar (ya sin riesgo de "hydration mismatch") leemos
+  // datos que dependen del navegador, como el perfil guardado o la sesión.
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   // En modo "cuenta real" (no demo), exige sesión iniciada y carga los
   // alumnos guardados en Supabase. La demo de marketing no necesita login.
   useEffect(() => {
+    if (!mounted) return;
     if (isDemo) return;
     if (authLoading) return;
     if (!user) {
@@ -61,7 +69,7 @@ function DemoLayout() {
       return;
     }
     hydrateStudentsFromSupabase();
-  }, [isDemo, authLoading, user, navigate]);
+  }, [mounted, isDemo, authLoading, user, navigate]);
 
   // Si el navegador restaura esta página desde la caché de "atrás/adelante"
   // (bfcache) tras cerrar sesión o cambiar de cuenta, fuerza una recarga
@@ -74,7 +82,7 @@ function DemoLayout() {
     return () => window.removeEventListener("pageshow", onPageShow);
   }, []);
   const pendingMessages = Object.values(messagesMap).reduce((n, list) => n + list.length, 0);
-  const profile = getAccountProfile();
+  const profile = mounted ? getAccountProfile() : null;
 
   const nav: NavItem[] = [
     { to: "/demo", label: "Inicio", icon: LayoutDashboard, exact: true },
@@ -117,8 +125,9 @@ function DemoLayout() {
   };
 
   // Evita mostrar el panel con datos vacíos mientras comprobamos la sesión
-  // o redirigimos a /iniciar-sesion.
-  if (!isDemo && (authLoading || !user)) {
+  // o redirigimos a /iniciar-sesion. Solo se activa tras montar, para no
+  // provocar un desajuste de hidratación entre servidor y navegador.
+  if (mounted && !isDemo && (authLoading || !user)) {
     return (
       <div className="grid min-h-screen place-items-center bg-surface text-sm text-ink-muted">
         Comprobando sesión…
