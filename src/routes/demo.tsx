@@ -63,12 +63,16 @@ function DemoLayout() {
     hydrateStudentsFromSupabase();
   }, [isDemo, authLoading, user, navigate]);
 
-  // En modo "cuenta real" (no demo), carga los alumnos guardados en Supabase.
+  // Si el navegador restaura esta página desde la caché de "atrás/adelante"
+  // (bfcache) tras cerrar sesión o cambiar de cuenta, fuerza una recarga
+  // real en vez de mostrar el árbol de React congelado con datos viejos.
   useEffect(() => {
-    if (!isDemo) {
-      hydrateStudentsFromSupabase();
-    }
-  }, [isDemo]);
+    const onPageShow = (e: PageTransitionEvent) => {
+      if (e.persisted) window.location.reload();
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
   const pendingMessages = Object.values(messagesMap).reduce((n, list) => n + list.length, 0);
   const profile = getAccountProfile();
 
@@ -94,10 +98,13 @@ function DemoLayout() {
   const coachSub = isDemo ? "Coach · Plan Pro" : profile?.businessName || "Cuenta nueva";
   const coachInitials = isDemo ? "CR" : initials(profile);
 
-  const exitToLanding = () => {
+  const exitToLanding = async () => {
     if (typeof window !== "undefined") {
       if (!isDemo) {
-        signOutTrainer();
+        const { error } = await signOutTrainer();
+        if (error) {
+          console.error(error);
+        }
         // Evita que queden alumnos/rutinas/mensajes de esta cuenta visibles
         // si otra persona (u otra cuenta) usa este mismo navegador después.
         resetAccountStore();
