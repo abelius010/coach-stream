@@ -426,8 +426,6 @@ const syncAddStudent = async (synced: boolean, s: StudentExt) => {
     data: { user },
     error: userError,
   } = await supabase.auth.getUser();
-  // eslint-disable-next-line no-console
-  console.log("[debug] syncAddStudent → usuario autenticado:", user?.id, user?.email);
   if (userError || !user) {
     console.error("[supabase] No hay sesión activa, no se crea el alumno:", userError?.message);
     return;
@@ -513,8 +511,6 @@ export const hydrateStudentsFromSupabase = async () => {
     data: { user },
     error: userError,
   } = await supabase.auth.getUser();
-  // eslint-disable-next-line no-console
-  console.log("[debug] hydrateStudentsFromSupabase → usuario autenticado:", user?.id, user?.email);
   if (userError || !user) {
     console.error("[supabase] No hay sesión activa, no se cargan alumnos:", userError?.message);
     accountStore.setState({ students: [] });
@@ -530,11 +526,6 @@ export const hydrateStudentsFromSupabase = async () => {
     accountStore.setState({ students: [] });
     return;
   }
-  // eslint-disable-next-line no-console
-  console.log(
-    "[debug] alumnos recibidos:",
-    (data ?? []).map((r) => ({ id: r.id, name: r.name, trainer_id: r.trainer_id })),
-  );
   accountStore.setState({ students: (data ?? []).map(rowToStudent) });
 };
 
