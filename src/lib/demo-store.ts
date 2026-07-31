@@ -1,7 +1,7 @@
 import { create, type StoreApi, type UseBoundStore } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { students as seedStudents, workoutWeeks as seedWorkoutWeeks, nutritionPlan as seedNutrition, type Student } from "./demo-data";
-import { getMode } from "./fitflow-mode";
+import { getMode, useMode } from "./fitflow-mode";
 import { supabase } from "./supabase";
 
 export type StudentExt = Student & {
@@ -955,15 +955,19 @@ const createFitFlowStore = (persistName: string, seed: Seed, synced: boolean) =>
 const demoStore = createFitFlowStore("fitflow-demo", DEMO_SEED, false);
 const accountStore = createFitFlowStore("fitflow-account", EMPTY_SEED, true);
 
-const pickStore = (): UseBoundStore<StoreApi<State>> =>
-  getMode() === "account" ? accountStore : demoStore;
+const pickStore = (mode: "demo" | "account"): UseBoundStore<StoreApi<State>> =>
+  mode === "account" ? accountStore : demoStore;
 
 // Dispatcher hook: keeps existing API. Selects the store based on current mode.
+// Uses useMode() (SSR-safe, matches server on first paint) instead of reading
+// localStorage directly, so this never disagrees with what the server
+// rendered and never causes a React hydration mismatch.
 export const useDemoStore = (<T>(selector: (state: State) => T): T => {
-  return pickStore()(selector);
+  const mode = useMode();
+  return pickStore(mode)(selector);
 }) as <T>(selector: (state: State) => T) => T;
 
-export const getDemoState = (): State => pickStore().getState();
+export const getDemoState = (): State => pickStore(getMode()).getState();
 
 export const resetAccountStore = () => {
   accountStore.getState().resetDemo();
