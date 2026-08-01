@@ -243,7 +243,8 @@ function DemoDashboardSeeded() {
 
 function DashboardHome({ students }: { students: StudentExt[] }) {
   return (
-    <>
+    <div className="space-y-6">
+
 
 
       <div className="grid gap-4 lg:grid-cols-3">
