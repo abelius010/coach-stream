@@ -50,6 +50,7 @@ const iconFor: Record<string, typeof Dumbbell> = {
 function DemoDashboard() {
   const mode = useMode();
   const students = useDemoStore((s) => s.students);
+  const studentsLoading = useDemoStore((s) => s.studentsLoading);
   const routines = useDemoStore((s) => s.routines);
   const nutritionPlans = useDemoStore((s) => s.nutritionPlans);
   const reviews = useDemoStore((s) => s.reviews);
@@ -67,7 +68,11 @@ function DemoDashboard() {
     const reachedLimit = planLimit !== null && students.length >= planLimit;
 
     const emptyKpis = [
-      { label: "Alumnos activos", value: students.filter((s) => s.status === "activo").length, icon: Users },
+      {
+        label: "Alumnos activos",
+        value: studentsLoading ? "…" : students.filter((s) => s.status === "activo").length,
+        icon: Users,
+      },
       { label: "Rutinas creadas", value: routinesCount, icon: Dumbbell },
       { label: "Planes nutricionales", value: plansCount, icon: Utensils },
       { label: "Revisiones realizadas", value: reviewsCount, icon: ClipboardCheck },
