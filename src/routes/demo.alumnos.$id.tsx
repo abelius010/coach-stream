@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   MessageSquare,
@@ -29,10 +29,13 @@ import {
 import {
   useDemoStore,
   isNewStudent,
+  hydrateRoutineFromSupabase,
+  hydrateProgressFromSupabase,
   type StudentExt,
   type Review,
   type WeightLog,
 } from "../lib/demo-store";
+import { useMode } from "../lib/fitflow-mode";
 import { EditStudentSheet } from "../components/demo/EditStudentSheet";
 import { TabActions, EmptyDeletedState } from "../components/demo/TabActions";
 import { ActionMenu, type ActionItem } from "../components/demo/ActionMenu";
@@ -70,6 +73,13 @@ function StudentDetail() {
   const role = useDemoStore((s) => s.role);
   const removeStudent = useDemoStore((s) => s.removeStudent);
   const navigate = useNavigate();
+  const mode = useMode();
+
+  useEffect(() => {
+    if (mode !== "account") return;
+    hydrateRoutineFromSupabase(id);
+    hydrateProgressFromSupabase(id);
+  }, [mode, id]);
 
   const [tab, setTab] = useState<TabId>("resumen");
   const [editing, setEditing] = useState(false);

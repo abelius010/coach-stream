@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Dumbbell,
   Check,
@@ -13,10 +13,12 @@ import {
 import {
   useDemoStore,
   parseSetsCount,
+  hydrateRoutineFromSupabase,
+  hydrateProgressFromSupabase,
   type RoutineDay,
   type RoutineWeek,
 } from "@/lib/demo-store";
-import { useActiveAlumnoId } from "@/lib/fitflow-mode";
+import { useActiveAlumnoId, useMode } from "@/lib/fitflow-mode";
 import { useAccountProfile, displayName } from "@/lib/fitflow-mode";
 
 export const Route = createFileRoute("/alumno/entrenamiento")({
@@ -39,6 +41,13 @@ function AlumnoEntrenamiento() {
   const weeks = useDemoStore((s) => (studentId ? s.routines[studentId] : undefined));
   const progress = useDemoStore((s) => (studentId ? s.workoutProgress[studentId] : undefined));
   const coachName = displayName(useAccountProfile());
+  const mode = useMode();
+
+  useEffect(() => {
+    if (mode !== "account" || !studentId) return;
+    hydrateRoutineFromSupabase(studentId);
+    hydrateProgressFromSupabase(studentId);
+  }, [mode, studentId]);
 
   const activeDay = useMemo(() => pickActiveDay(weeks), [weeks]);
 
