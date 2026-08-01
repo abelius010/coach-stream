@@ -259,6 +259,7 @@ export const mealsForToday = (plan: NutritionPlanData): NutritionMeal[] => {
 
 type State = {
   students: StudentExt[];
+  studentsLoading: boolean;
   role: DemoRole;
   workoutTemplates: WorkoutTemplate[];
   nutritionTemplates: NutritionTemplate[];
@@ -507,13 +508,14 @@ const syncRemoveStudent = async (synced: boolean, id: string) => {
 };
 
 export const hydrateStudentsFromSupabase = async () => {
+  accountStore.setState({ studentsLoading: true });
   const {
     data: { user },
     error: userError,
   } = await supabase.auth.getUser();
   if (userError || !user) {
     console.error("[supabase] No hay sesión activa, no se cargan alumnos:", userError?.message);
-    accountStore.setState({ students: [] });
+    accountStore.setState({ students: [], studentsLoading: false });
     return;
   }
   const { data, error } = await supabase
@@ -523,10 +525,10 @@ export const hydrateStudentsFromSupabase = async () => {
     .order("created_at", { ascending: false });
   if (error) {
     console.error("[supabase] Error cargando alumnos:", error.message);
-    accountStore.setState({ students: [] });
+    accountStore.setState({ students: [], studentsLoading: false });
     return;
   }
-  accountStore.setState({ students: (data ?? []).map(rowToStudent) });
+  accountStore.setState({ students: (data ?? []).map(rowToStudent), studentsLoading: false });
 };
 
 const createFitFlowStore = (persistName: string, seed: Seed, synced: boolean) =>
@@ -534,6 +536,7 @@ const createFitFlowStore = (persistName: string, seed: Seed, synced: boolean) =>
     persist(
       (set, get) => ({
         students: seed.students,
+        studentsLoading: false,
         role: "coach" as DemoRole,
         workoutTemplates: seed.workoutTemplates,
         nutritionTemplates: seed.nutritionTemplates,
@@ -916,6 +919,7 @@ const createFitFlowStore = (persistName: string, seed: Seed, synced: boolean) =>
         resetDemo: () =>
           set({
             students: seed.students,
+            studentsLoading: false,
             workoutTemplates: seed.workoutTemplates,
             nutritionTemplates: seed.nutritionTemplates,
             routines: {},
