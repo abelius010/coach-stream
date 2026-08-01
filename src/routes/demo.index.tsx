@@ -18,7 +18,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { activityFeed, smartTasks, stats, students as seededStudents } from "../lib/demo-data";
+import { activityFeed, smartTasks, students as seededStudents } from "../lib/demo-data";
 import { useDemoStore, type StudentExt } from "../lib/demo-store";
 import { useMode, useAccountProfile, getPlanLimit } from "../lib/fitflow-mode";
 import { PlanLimitBanner } from "../components/demo/PlanLimitBanner";
