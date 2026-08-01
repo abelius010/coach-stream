@@ -17,10 +17,21 @@ import {
   Inbox,
   Sparkles,
 } from "lucide-react";
+import { useMemo, useState } from "react";
 import { activityFeed, smartTasks, stats, students as seededStudents } from "../lib/demo-data";
-import { useDemoStore } from "../lib/demo-store";
+import { useDemoStore, type StudentExt } from "../lib/demo-store";
 import { useMode, useAccountProfile, getPlanLimit } from "../lib/fitflow-mode";
 import { PlanLimitBanner } from "../components/demo/PlanLimitBanner";
+import { InboxPanel } from "../components/demo/DashboardInbox";
+import {
+  inactiveStudents,
+  mealPhotos,
+  missingWeights,
+  pendingReviews,
+  pendingVideos,
+  type InboxView,
+} from "../lib/demo-inbox";
+
 
 export const Route = createFileRoute("/demo/")({
   component: DemoDashboard,
