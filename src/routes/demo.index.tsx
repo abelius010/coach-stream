@@ -17,10 +17,21 @@ import {
   Inbox,
   Sparkles,
 } from "lucide-react";
-import { activityFeed, smartTasks, stats, students as seededStudents } from "../lib/demo-data";
-import { useDemoStore } from "../lib/demo-store";
+import { useMemo, useState } from "react";
+import { activityFeed, smartTasks, students as seededStudents } from "../lib/demo-data";
+import { useDemoStore, type StudentExt } from "../lib/demo-store";
 import { useMode, useAccountProfile, getPlanLimit } from "../lib/fitflow-mode";
 import { PlanLimitBanner } from "../components/demo/PlanLimitBanner";
+import { InboxPanel } from "../components/demo/DashboardInbox";
+import {
+  inactiveStudents,
+  mealPhotos,
+  missingWeights,
+  pendingReviews,
+  pendingVideos,
+  type InboxView,
+} from "../lib/demo-inbox";
+
 
 export const Route = createFileRoute("/demo/")({
   component: DemoDashboard,
@@ -158,13 +169,32 @@ function DemoDashboard() {
   }
 
   // ----- Demo mode (seeded) -----
-  const kpis = [
-    { label: "Alumnos activos", value: stats.activeStudents, icon: Users, tone: "neutral" },
-    { label: "Revisiones pendientes", value: stats.pendingReviews, icon: ClipboardCheck, tone: "brand" },
-    { label: "Vídeos por revisar", value: stats.pendingVideos, icon: Video, tone: "brand" },
-    { label: "Fotos de comida nuevas", value: stats.newMealPhotos, icon: Camera, tone: "neutral" },
-    { label: "Sin actividad +3 días", value: stats.inactiveStudents, icon: AlertTriangle, tone: "warn" },
-    { label: "Sin peso semanal", value: stats.missingWeights, icon: Scale, tone: "warn" },
+  return <DemoDashboardSeeded />;
+}
+
+function DemoDashboardSeeded() {
+  const students = useDemoStore((s) => s.students);
+  const [view, setView] = useState<InboxView>("home");
+
+  const counts = useMemo(
+    () => ({
+      activos: students.filter((s) => s.status === "activo").length,
+      revisiones: pendingReviews(students).length,
+      videos: pendingVideos(students).length,
+      comidas: mealPhotos(students).length,
+      inactivos: inactiveStudents(students).length,
+      peso: missingWeights(students).length,
+    }),
+    [students],
+  );
+
+  const kpis: { key: Exclude<InboxView, "home">; label: string; value: number; icon: typeof Users; tone: string }[] = [
+    { key: "activos", label: "Alumnos activos", value: counts.activos, icon: Users, tone: "neutral" },
+    { key: "revisiones", label: "Revisiones pendientes", value: counts.revisiones, icon: ClipboardCheck, tone: "brand" },
+    { key: "videos", label: "Vídeos por revisar", value: counts.videos, icon: Video, tone: "brand" },
+    { key: "comidas", label: "Fotos de comida nuevas", value: counts.comidas, icon: Camera, tone: "neutral" },
+    { key: "inactivos", label: "Sin actividad +3 días", value: counts.inactivos, icon: AlertTriangle, tone: "warn" },
+    { key: "peso", label: "Sin peso semanal", value: counts.peso, icon: Scale, tone: "warn" },
   ];
 
   return (
@@ -183,8 +213,15 @@ function DemoDashboard() {
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-6">
         {kpis.map((k) => {
           const Icon = k.icon;
+          const active = view === k.key;
           return (
-            <div key={k.label} className="rounded-2xl border border-border bg-background p-4 shadow-soft">
+            <button
+              key={k.label}
+              onClick={() => setView(active ? "home" : k.key)}
+              className={`rounded-2xl border bg-background p-4 text-left shadow-soft transition hover:-translate-y-0.5 hover:shadow-md ${
+                active ? "border-foreground" : "border-border"
+              }`}
+            >
               <div className="flex items-center justify-between">
                 <div
                   className={`grid h-8 w-8 place-items-center rounded-lg ${
@@ -197,13 +234,29 @@ function DemoDashboard() {
                 >
                   <Icon className="h-4 w-4" />
                 </div>
+                <ArrowUpRight className="h-3.5 w-3.5 text-ink-muted" />
               </div>
               <div className="mt-3 text-2xl font-semibold tracking-tight">{k.value}</div>
               <div className="text-xs text-ink-muted">{k.label}</div>
-            </div>
+            </button>
           );
         })}
       </div>
+
+      {view !== "home" ? (
+        <InboxPanel view={view} onBack={() => setView("home")} />
+      ) : (
+        <DashboardHome students={students} />
+      )}
+    </div>
+  );
+}
+
+function DashboardHome({ students }: { students: StudentExt[] }) {
+  return (
+    <div className="space-y-6">
+
+
 
       <div className="grid gap-4 lg:grid-cols-3">
         <section className="rounded-2xl border border-border bg-background lg:col-span-2">

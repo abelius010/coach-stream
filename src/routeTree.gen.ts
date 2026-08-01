@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RegistroRouteImport } from './routes/registro'
+import { Route as IniciarSesionRouteImport } from './routes/iniciar-sesion'
 import { Route as DemoRouteImport } from './routes/demo'
 import { Route as AlumnoRouteImport } from './routes/alumno'
 import { Route as IndexRouteImport } from './routes/index'
@@ -29,6 +30,11 @@ import { Route as DemoAlumnosIdRouteImport } from './routes/demo.alumnos.$id'
 const RegistroRoute = RegistroRouteImport.update({
   id: '/registro',
   path: '/registro',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IniciarSesionRoute = IniciarSesionRouteImport.update({
+  id: '/iniciar-sesion',
+  path: '/iniciar-sesion',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoRoute = DemoRouteImport.update({
@@ -111,6 +117,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/alumno': typeof AlumnoRouteWithChildren
   '/demo': typeof DemoRouteWithChildren
+  '/iniciar-sesion': typeof IniciarSesionRoute
   '/registro': typeof RegistroRoute
   '/alumno/chat': typeof AlumnoChatRoute
   '/alumno/entrenamiento': typeof AlumnoEntrenamientoRoute
@@ -127,6 +134,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/iniciar-sesion': typeof IniciarSesionRoute
   '/registro': typeof RegistroRoute
   '/alumno/chat': typeof AlumnoChatRoute
   '/alumno/entrenamiento': typeof AlumnoEntrenamientoRoute
@@ -146,6 +154,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/alumno': typeof AlumnoRouteWithChildren
   '/demo': typeof DemoRouteWithChildren
+  '/iniciar-sesion': typeof IniciarSesionRoute
   '/registro': typeof RegistroRoute
   '/alumno/chat': typeof AlumnoChatRoute
   '/alumno/entrenamiento': typeof AlumnoEntrenamientoRoute
@@ -166,6 +175,7 @@ export interface FileRouteTypes {
     | '/'
     | '/alumno'
     | '/demo'
+    | '/iniciar-sesion'
     | '/registro'
     | '/alumno/chat'
     | '/alumno/entrenamiento'
@@ -182,6 +192,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/iniciar-sesion'
     | '/registro'
     | '/alumno/chat'
     | '/alumno/entrenamiento'
@@ -200,6 +211,7 @@ export interface FileRouteTypes {
     | '/'
     | '/alumno'
     | '/demo'
+    | '/iniciar-sesion'
     | '/registro'
     | '/alumno/chat'
     | '/alumno/entrenamiento'
@@ -219,6 +231,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AlumnoRoute: typeof AlumnoRouteWithChildren
   DemoRoute: typeof DemoRouteWithChildren
+  IniciarSesionRoute: typeof IniciarSesionRoute
   RegistroRoute: typeof RegistroRoute
 }
 
@@ -229,6 +242,13 @@ declare module '@tanstack/react-router' {
       path: '/registro'
       fullPath: '/registro'
       preLoaderRoute: typeof RegistroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/iniciar-sesion': {
+      id: '/iniciar-sesion'
+      path: '/iniciar-sesion'
+      fullPath: '/iniciar-sesion'
+      preLoaderRoute: typeof IniciarSesionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo': {
@@ -384,6 +404,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AlumnoRoute: AlumnoRouteWithChildren,
   DemoRoute: DemoRouteWithChildren,
+  IniciarSesionRoute: IniciarSesionRoute,
   RegistroRoute: RegistroRoute,
 }
 export const routeTree = rootRouteImport
