@@ -531,6 +531,287 @@ export const hydrateStudentsFromSupabase = async () => {
   accountStore.setState({ students: (data ?? []).map(rowToStudent), studentsLoading: false });
 };
 
+// ---------- Entrenamientos: rutina (plan → semanas → días → ejercicios) ----------
+// Un único plan "activo" por alumno, con un id determinista — coincide con el
+// modelo actual de la app (una sola rutina por alumno, editada de golpe).
+
+const trainingPlanId = (studentId: string) => `plan_${studentId}`;
+
+const syncSaveRoutine = async (synced: boolean, studentId: string, weeks: RoutineWeek[]) => {
+  if (!synced) return;
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    console.error("[supabase] No hay sesión activa, no se guarda la rutina.");
+    return;
+  }
+  const planId = trainingPlanId(studentId);
+  const { error: planError } = await supabase.from("training_plans").upsert({
+    id: planId,
+    trainer_id: user.id,
+    student_id: studentId,
+    name: "Rutina",
+    status: "active",
+    updated_at: new Date().toISOString(),
+  });
+  if (planError) {
+    console.error("[supabase] Error guardando el plan:", planError.message);
+    return;
+  }
+
+  // Semanas: upsert las que siguen existiendo, borra las que el entrenador quitó.
+  const { data: existingWeeks } = await supabase.from("training_weeks").select("id").eq("training_plan_id", planId);
+  const existingWeekIds = new Set((existingWeeks ?? []).map((w) => w.id as string));
+  const currentWeekIds = new Set(weeks.map((w) => w.id));
+  const removedWeekIds = [...existingWeekIds].filter((id) => !currentWeekIds.has(id));
+  if (removedWeekIds.length) {
+    await supabase.from("training_weeks").delete().in("id", removedWeekIds);
+  }
+  if (weeks.length) {
+    const weekRows = weeks.map((w, i) => ({ id: w.id, training_plan_id: planId, name: w.week, position: i }));
+    const { error } = await supabase.from("training_weeks").upsert(weekRows);
+    if (error) console.error("[supabase] Error guardando semanas:", error.message);
+  }
+
+  for (const week of weeks) {
+    const { data: existingDays } = await supabase.from("training_days").select("id").eq("training_week_id", week.id);
+    const existingDayIds = new Set((existingDays ?? []).map((d) => d.id as string));
+    const currentDayIds = new Set(week.days.map((d) => d.id));
+    const removedDayIds = [...existingDayIds].filter((id) => !currentDayIds.has(id));
+    if (removedDayIds.length) {
+      await supabase.from("training_days").delete().in("id", removedDayIds);
+    }
+    if (week.days.length) {
+      const dayRows = week.days.map((d, i) => ({
+        id: d.id,
+        training_week_id: week.id,
+        name: d.day,
+        done: !!d.done,
+        position: i,
+      }));
+      const { error } = await supabase.from("training_days").upsert(dayRows);
+      if (error) console.error("[supabase] Error guardando días:", error.message);
+    }
+
+    for (const day of week.days) {
+      const { data: existingExercises } = await supabase
+        .from("training_exercises")
+        .select("id")
+        .eq("training_day_id", day.id);
+      const existingExIds = new Set((existingExercises ?? []).map((e) => e.id as string));
+      const currentExIds = new Set(day.exercises.map((e) => e.id));
+      const removedExIds = [...existingExIds].filter((id) => !currentExIds.has(id));
+      if (removedExIds.length) {
+        await supabase.from("training_exercises").delete().in("id", removedExIds);
+      }
+      if (day.exercises.length) {
+        const exRows = day.exercises.map((e, i) => ({
+          id: e.id,
+          training_day_id: day.id,
+          name: e.name,
+          sets: e.sets,
+          reps: e.reps,
+          weight: e.weight,
+          note: e.note,
+          position: i,
+        }));
+        const { error } = await supabase.from("training_exercises").upsert(exRows);
+        if (error) console.error("[supabase] Error guardando ejercicios:", error.message);
+      }
+    }
+  }
+};
+
+export const hydrateRoutineFromSupabase = async (studentId: string) => {
+  const planId = trainingPlanId(studentId);
+  const { data, error } = await supabase
+    .from("training_weeks")
+    .select(
+      "id, name, position, training_days(id, name, done, position, training_exercises(id, name, sets, reps, weight, note, position))",
+    )
+    .eq("training_plan_id", planId)
+    .order("position", { ascending: true });
+  if (error) {
+    console.error("[supabase] Error cargando la rutina:", error.message);
+    return;
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rows = (data ?? []) as any[];
+  const weeks: RoutineWeek[] = rows.map((w) => ({
+    id: w.id,
+    week: w.name,
+    days: [...(w.training_days ?? [])]
+      .sort((a, b) => a.position - b.position)
+      .map((d) => ({
+        id: d.id,
+        day: d.name,
+        done: d.done,
+        exercises: [...(d.training_exercises ?? [])]
+          .sort((a, b) => a.position - b.position)
+          .map((e) => ({
+            id: e.id,
+            name: e.name,
+            sets: e.sets ?? "",
+            reps: e.reps ?? "",
+            weight: e.weight ?? "",
+            note: e.note ?? "",
+          })),
+      })),
+  }));
+  const state = accountStore.getState();
+  accountStore.setState({ routines: { ...state.routines, [studentId]: weeks } });
+};
+
+// ---------- Progreso del alumno: sesión por día + serie por ejercicio ----------
+// Una sesión = un día concreto de la rutina para un alumno (id determinista,
+// un único registro por día, igual que el modelo local actual).
+
+const workoutSessionId = (studentId: string, dayId: string) => `sess_${studentId}_${dayId}`;
+
+const ensureWorkoutSession = async (studentId: string, dayId: string): Promise<string | null> => {
+  const id = workoutSessionId(studentId, dayId);
+  const { error } = await supabase
+    .from("workout_sessions")
+    .upsert({ id, student_id: studentId, training_day_id: dayId }, { onConflict: "id", ignoreDuplicates: true });
+  if (error) {
+    console.error("[supabase] Error creando la sesión de entrenamiento:", error.message);
+    return null;
+  }
+  return id;
+};
+
+// Las series (set_number >= 0) guardan si esa serie concreta está hecha.
+// Un registro aparte con set_number = -1 guarda el peso/nota a nivel de
+// ejercicio (que en la app actual no es por serie, sino por ejercicio).
+const syncToggleSet = async (
+  synced: boolean,
+  studentId: string,
+  dayId: string,
+  exerciseId: string,
+  setIndex: number,
+  done: boolean,
+) => {
+  if (!synced) return;
+  const sessionId = await ensureWorkoutSession(studentId, dayId);
+  if (!sessionId) return;
+  const { error } = await supabase.from("exercise_logs").upsert({
+    id: `log_${sessionId}_${exerciseId}_${setIndex}`,
+    workout_session_id: sessionId,
+    training_exercise_id: exerciseId,
+    set_number: setIndex,
+    completed: done,
+  });
+  if (error) console.error("[supabase] Error guardando la serie:", error.message);
+};
+
+const upsertExerciseMeta = async (
+  studentId: string,
+  dayId: string,
+  exerciseId: string,
+  patch: { weight?: string; note?: string },
+) => {
+  const sessionId = await ensureWorkoutSession(studentId, dayId);
+  if (!sessionId) return;
+  const id = `log_${sessionId}_${exerciseId}_meta`;
+  const { data: existing } = await supabase.from("exercise_logs").select("weight, note").eq("id", id).maybeSingle();
+  const { error } = await supabase.from("exercise_logs").upsert({
+    id,
+    workout_session_id: sessionId,
+    training_exercise_id: exerciseId,
+    set_number: -1,
+    weight: existing?.weight ?? null,
+    note: existing?.note ?? null,
+    ...patch,
+  });
+  if (error) console.error("[supabase] Error guardando datos del ejercicio:", error.message);
+};
+
+const syncSetExerciseWeight = async (
+  synced: boolean,
+  studentId: string,
+  dayId: string,
+  exerciseId: string,
+  weight: string,
+) => {
+  if (!synced) return;
+  await upsertExerciseMeta(studentId, dayId, exerciseId, { weight });
+};
+
+const syncSetExerciseNote = async (
+  synced: boolean,
+  studentId: string,
+  dayId: string,
+  exerciseId: string,
+  note: string,
+) => {
+  if (!synced) return;
+  await upsertExerciseMeta(studentId, dayId, exerciseId, { note });
+};
+
+const syncFinishDay = async (synced: boolean, studentId: string, dayId: string) => {
+  if (!synced) return;
+  const sessionId = await ensureWorkoutSession(studentId, dayId);
+  if (!sessionId) return;
+  const { error } = await supabase
+    .from("workout_sessions")
+    .update({ status: "completed", completed_at: new Date().toISOString() })
+    .eq("id", sessionId);
+  if (error) console.error("[supabase] Error marcando el día como completado:", error.message);
+  const { error: dayError } = await supabase.from("training_days").update({ done: true }).eq("id", dayId);
+  if (dayError) console.error("[supabase] Error actualizando el día:", dayError.message);
+};
+
+const syncResetDayProgress = async (synced: boolean, studentId: string, dayId: string) => {
+  if (!synced) return;
+  const { error } = await supabase
+    .from("workout_sessions")
+    .delete()
+    .eq("id", workoutSessionId(studentId, dayId));
+  if (error) console.error("[supabase] Error reiniciando el progreso del día:", error.message);
+  const { error: dayError } = await supabase.from("training_days").update({ done: false }).eq("id", dayId);
+  if (dayError) console.error("[supabase] Error actualizando el día:", dayError.message);
+};
+
+export const hydrateProgressFromSupabase = async (studentId: string) => {
+  const { data, error } = await supabase
+    .from("workout_sessions")
+    .select("training_day_id, completed_at, exercise_logs(training_exercise_id, set_number, weight, note, completed)")
+    .eq("student_id", studentId);
+  if (error) {
+    console.error("[supabase] Error cargando el progreso:", error.message);
+    return;
+  }
+  const progress: Record<string, DayProgress> = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  for (const session of (data ?? []) as any[]) {
+    const exercises: Record<string, ExerciseProgress> = {};
+    for (const log of session.exercise_logs ?? []) {
+      const exId = log.training_exercise_id as string;
+      if (!exercises[exId]) exercises[exId] = { sets: [] };
+      if (log.set_number === -1) {
+        exercises[exId].weightUsed = log.weight ?? undefined;
+        exercises[exId].note = log.note ?? undefined;
+      } else {
+        const idx = log.set_number as number;
+        const sets = exercises[exId].sets;
+        while (sets.length <= idx) sets.push({ done: false });
+        sets[idx] = { done: !!log.completed };
+      }
+    }
+    for (const exId of Object.keys(exercises)) {
+      const sets = exercises[exId].sets;
+      exercises[exId].done = sets.length > 0 && sets.every((s) => s.done);
+    }
+    progress[session.training_day_id as string] = {
+      exercises,
+      finishedAt: session.completed_at ?? undefined,
+    };
+  }
+  const state = accountStore.getState();
+  accountStore.setState({ workoutProgress: { ...state.workoutProgress, [studentId]: progress } });
+};
+
 const createFitFlowStore = (persistName: string, seed: Seed, synced: boolean) =>
   create<State>()(
     persist(
@@ -641,8 +922,10 @@ const createFitFlowStore = (persistName: string, seed: Seed, synced: boolean) =>
             coachMealComments: omit(s.coachMealComments),
           });
         },
-        setRoutine: (studentId, weeks) =>
-          set({ routines: { ...get().routines, [studentId]: weeks } }),
+        setRoutine: (studentId, weeks) => {
+          set({ routines: { ...get().routines, [studentId]: weeks } });
+          syncSaveRoutine(synced, studentId, weeks);
+        },
         setNutritionPlan: (studentId, plan) =>
           set({ nutritionPlans: { ...get().nutritionPlans, [studentId]: plan } }),
         addReview: (studentId, review) => {
@@ -726,6 +1009,7 @@ const createFitFlowStore = (persistName: string, seed: Seed, synced: boolean) =>
               [studentId]: { ...prog, [dayId]: nextDay },
             },
           });
+          syncToggleSet(synced, studentId, dayId, exerciseId, setIndex, sets[setIndex].done);
         },
         setExerciseWeight: (studentId, dayId, exerciseId, weight) => {
           const state = get();
@@ -742,6 +1026,7 @@ const createFitFlowStore = (persistName: string, seed: Seed, synced: boolean) =>
               [studentId]: { ...prog, [dayId]: nextDay },
             },
           });
+          syncSetExerciseWeight(synced, studentId, dayId, exerciseId, weight);
         },
         setExerciseNote: (studentId, dayId, exerciseId, note) => {
           const state = get();
@@ -758,6 +1043,7 @@ const createFitFlowStore = (persistName: string, seed: Seed, synced: boolean) =>
               [studentId]: { ...prog, [dayId]: nextDay },
             },
           });
+          syncSetExerciseNote(synced, studentId, dayId, exerciseId, note);
         },
         finishDay: (studentId, dayId) => {
           const state = get();
@@ -780,6 +1066,7 @@ const createFitFlowStore = (persistName: string, seed: Seed, synced: boolean) =>
               [studentId]: { ...prog, [dayId]: nextDay },
             },
           });
+          syncFinishDay(synced, studentId, dayId);
         },
         resetDayProgress: (studentId, dayId) => {
           const state = get();
@@ -797,6 +1084,7 @@ const createFitFlowStore = (persistName: string, seed: Seed, synced: boolean) =>
             routines,
             workoutProgress: { ...state.workoutProgress, [studentId]: prog },
           });
+          syncResetDayProgress(synced, studentId, dayId);
         },
         setMealPhoto: (studentId, mealId, photo) => {
           const state = get();
