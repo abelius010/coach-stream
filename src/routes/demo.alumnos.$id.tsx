@@ -43,6 +43,8 @@ import { DeleteStudentDialog } from "../components/demo/DeleteStudentDialog";
 import { ToastStack, type ToastData } from "../components/demo/Toast";
 import { WorkoutRoutine } from "../components/demo/WorkoutRoutine";
 import { NutritionTab } from "../components/demo/NutritionTab";
+import { ReviewsTab } from "../components/demo/ReviewsTab";
+
 import { Modal, ModalButton } from "../components/demo/Modal";
 import { Field, inputCls, textareaCls } from "../components/demo/Field";
 
@@ -55,11 +57,13 @@ const tabs = [
   { id: "resumen", label: "Resumen", icon: User },
   { id: "entrenos", label: "Entrenamientos", icon: Dumbbell },
   { id: "nutricion", label: "Nutrición", icon: Utensils },
+  { id: "revisiones", label: "Revisiones", icon: ClipboardCheck },
   { id: "progreso", label: "Progreso", icon: TrendingUp },
   { id: "habitos", label: "Hábitos", icon: Activity },
   { id: "multimedia", label: "Multimedia", icon: ImageIcon },
   { id: "chat", label: "Chat", icon: MessageSquare },
 ] as const;
+
 
 type TabId = (typeof tabs)[number]["id"];
 
@@ -251,7 +255,16 @@ function StudentDetail() {
             )}
           </TabShell>
         )}
+        {tab === "revisiones" && (
+          <ReviewsTab
+            studentId={student.id}
+            studentName={student.name}
+            currentWeight={student.weight}
+            onToast={pushToast}
+          />
+        )}
         {tab === "progreso" && <ProgresoTab student={student} isNew={isNew} onToast={pushToast} />}
+
         {tab === "habitos" && <HabitosTab student={student} isNew={isNew} onToast={pushToast} />}
         {tab === "multimedia" && <MultimediaTab student={student} isNew={isNew} onToast={pushToast} />}
         {tab === "chat" && <ChatTab student={student} isNew={isNew} />}
