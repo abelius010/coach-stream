@@ -43,6 +43,8 @@ import { DeleteStudentDialog } from "../components/demo/DeleteStudentDialog";
 import { ToastStack, type ToastData } from "../components/demo/Toast";
 import { WorkoutRoutine } from "../components/demo/WorkoutRoutine";
 import { NutritionTab } from "../components/demo/NutritionTab";
+import { ReviewsTab } from "../components/demo/ReviewsTab";
+
 import { Modal, ModalButton } from "../components/demo/Modal";
 import { Field, inputCls, textareaCls } from "../components/demo/Field";
 
