@@ -253,7 +253,16 @@ function StudentDetail() {
             )}
           </TabShell>
         )}
+        {tab === "revisiones" && (
+          <ReviewsTab
+            studentId={student.id}
+            studentName={student.name}
+            currentWeight={student.weight}
+            onToast={pushToast}
+          />
+        )}
         {tab === "progreso" && <ProgresoTab student={student} isNew={isNew} onToast={pushToast} />}
+
         {tab === "habitos" && <HabitosTab student={student} isNew={isNew} onToast={pushToast} />}
         {tab === "multimedia" && <MultimediaTab student={student} isNew={isNew} onToast={pushToast} />}
         {tab === "chat" && <ChatTab student={student} isNew={isNew} />}
