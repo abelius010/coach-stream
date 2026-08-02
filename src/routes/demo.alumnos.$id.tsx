@@ -55,11 +55,13 @@ const tabs = [
   { id: "resumen", label: "Resumen", icon: User },
   { id: "entrenos", label: "Entrenamientos", icon: Dumbbell },
   { id: "nutricion", label: "Nutrición", icon: Utensils },
+  { id: "revisiones", label: "Revisiones", icon: ClipboardCheck },
   { id: "progreso", label: "Progreso", icon: TrendingUp },
   { id: "habitos", label: "Hábitos", icon: Activity },
   { id: "multimedia", label: "Multimedia", icon: ImageIcon },
   { id: "chat", label: "Chat", icon: MessageSquare },
 ] as const;
+
 
 type TabId = (typeof tabs)[number]["id"];
 
